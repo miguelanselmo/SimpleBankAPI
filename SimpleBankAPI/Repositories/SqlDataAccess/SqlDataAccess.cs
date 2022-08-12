@@ -1,4 +1,5 @@
 ﻿using Dapper;
+using Npgsql;
 using System.Data;
 using System.Data.SqlClient;
 
@@ -13,9 +14,9 @@ public class SqlDataAccess : ISqlDataAccess
         _config = config;
     }
 
-    public SqlConnection GetSqlConnection(string connectionId = "Default")
+    public NpgsqlConnection GetSqlConnection(string connectionId = "Default")
     {
-        return new SqlConnection(_config.GetConnectionString(connectionId));
+        return new NpgsqlConnection(_config.GetConnectionString(connectionId));
     }
 
     public async Task<IEnumerable<T>> LoadData<T, U>(
@@ -23,7 +24,7 @@ public class SqlDataAccess : ISqlDataAccess
         U parameters,
         string connectionId = "Default")
     {
-        using IDbConnection connection = new SqlConnection(_config.GetConnectionString(connectionId));
+        using IDbConnection connection = new NpgsqlConnection(_config.GetConnectionString(connectionId));
 
         return await connection.QueryAsync<T>(storedProcedure, parameters,
             commandType: CommandType.StoredProcedure);
@@ -34,7 +35,7 @@ public class SqlDataAccess : ISqlDataAccess
         T parameters,
         string connectionId = "Default")
     {
-        using IDbConnection connection = new SqlConnection(_config.GetConnectionString(connectionId));
+        using IDbConnection connection = new NpgsqlConnection(_config.GetConnectionString(connectionId));
 
         return await connection.ExecuteAsync(storedProcedure, parameters,
             commandType: CommandType.StoredProcedure);

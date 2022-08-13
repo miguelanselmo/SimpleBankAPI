@@ -1,6 +1,6 @@
 ﻿namespace SimpleBankAPI.Models;
 
-public class MovimModel
+public class MovementModel
 {
     public int Id { get; set; }
     public int AccountId { get; set; }

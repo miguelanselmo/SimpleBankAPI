@@ -12,9 +12,9 @@ public class UserUseCase
         _logger = logger;
         _repository = repository;
     }
-    public async Task<UserModel> CreateUser(UserModel user)
+    public async Task<bool> CreateUser(UserModel user)
     {
-        return await Task.FromResult(user);
+        return await _repository.Create(user);
     }
 
     public async Task<IEnumerable<UserModel>> GetUsers()

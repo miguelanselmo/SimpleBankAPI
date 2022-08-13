@@ -8,5 +8,4 @@ public class UserModel
     public string Password { get; set; }
     public string FullName { get; set; }
     public DateTime CreatedAt { get; set; }
-    public DateTime PasswordChangedAt { get; set; }
 }

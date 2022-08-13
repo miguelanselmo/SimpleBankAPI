@@ -10,10 +10,12 @@ using System.Text;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddFluentValidation(x => x.RegisterValidatorsFromAssemblyContaining<UserModel>());
+//builder.Services.AddFluentValidation(x => x.RegisterValidatorsFromAssemblyContaining<UserModel>());
 
 builder.Services.AddSingleton<ISqlDataAccess, SqlDataAccess>();
 builder.Services.AddScoped<IUserRepository, UserCacheRepository>();
+builder.Services.AddScoped<IAccountRepository, AccountCacheRepository>();
+builder.Services.AddScoped<ITransferRepository, TransferCacheRepository>();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
 {

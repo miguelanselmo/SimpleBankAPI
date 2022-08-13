@@ -1,52 +1,53 @@
 ﻿using Dapper;
 using Microsoft.Extensions.Caching.Distributed;
 using SimpleBankAPI.Models;
+using SimpleBankAPI.Models.Enums;
 using SimpleBankAPI.Repositories.Cache;
 using SimpleBankAPI.Repositories.SqlDataAccess;
 
 namespace SimpleBankAPI.Repositories;
 
-public class UserCacheRepository : IUserRepository
+public class AccountCacheRepository : IAccountRepository
 {
     private readonly ISqlDataAccess _db;
     private readonly IDistributedCache _cache;
     private const string _connectionId = "BankDB";
-    private const string _caheKey = "User";
+    private const string _caheKey = "Account";
 
 
-    public UserCacheRepository(ISqlDataAccess db, IDistributedCache cache)
+    public AccountCacheRepository(ISqlDataAccess db, IDistributedCache cache)
     {
         _db = db;
         _cache = cache;
     }
 
-    public async Task<UserModel?> Read(int id)
+    public async Task<AccountModel?> Read(int id)
     {
-        var resultCache = _cache.GetRecordAsync<UserModel[]>(_caheKey+id);
+        var resultCache = _cache.GetRecordAsync<AccountModel[]>(_caheKey+id);
         if (resultCache.Result is null)
         {
-            var query = "SELECT * FROM users WHERE id=@Id";
+            var query = "SELECT * FROM accounts WHERE id=@Id";
             var parameters = new DynamicParameters();
             parameters.Add("Id", id);
             using (var connection = _db.GetSqlConnection(_connectionId))
             {
                 var resultDb = await connection.QueryFirstOrDefaultAsync<object>(query, parameters);
                 //var resultDb = await connection.QueryAsync<object>(query, parameters);
-                UserModel user = Map(resultDb);
-                await _cache.SetRecordAsync(_caheKey+id, user);
-                return user;
+                AccountModel Account = Map(resultDb);
+                await _cache.SetRecordAsync(_caheKey+id, Account);
+                return Account;
             }
         }
         else
             return resultCache.Result.Where(x => x.Id.Equals(id)).FirstOrDefault();
     }
 
-    public async Task<IEnumerable<UserModel>> Read()
+    public async Task<IEnumerable<AccountModel>> Read()
     {
-        var resultCache = _cache.GetRecordAsync<UserModel[]>(_caheKey);
+        var resultCache = _cache.GetRecordAsync<AccountModel[]>(_caheKey);
         if (resultCache.Result is null)
         {
-            var query = "SELECT * FROM users";
+            var query = "SELECT * FROM accounts";
             using (var connection = _db.GetSqlConnection(_connectionId))
             {
                 var resultDb = await connection.QueryAsync(query);
@@ -57,73 +58,67 @@ public class UserCacheRepository : IUserRepository
             return Map(resultCache.Result);
     }
 
-    private static IEnumerable<UserModel> Map(IEnumerable<dynamic> userDb)
+    private static IEnumerable<AccountModel> Map(IEnumerable<dynamic> AccountDb)
     {
-        IEnumerable<UserModel> userList = userDb.Select(x => new UserModel
+    IEnumerable<AccountModel> AccountList = AccountDb.Select(x => new AccountModel
         {
             Id = (int)x.id,
-            UserName = (string)x.username,
-            Email = (string)x.email,
-            Password = (string)x.password,
-            FullName = (string)x.full_name,
+            UserId = (int)x.user_id,
+            Balance = (decimal)x.balance,
+            Currency = (CurrencyEnum)x.currency,
             CreatedAt = (DateTime)x.created_at,
         });
-        return userList;
+        return AccountList;
     }
 
-    private static UserModel Map(dynamic x)
+    private static AccountModel Map(dynamic x)
     {
-        return new UserModel
+        return new AccountModel
         {
             Id = (int)x.id,
-            UserName = (string)x.username,
-            Email = (string)x.email,
-            Password = (string)x.password,
-            FullName = (string)x.full_name,
+            UserId = (int)x.user_id,
+            Balance = (decimal)x.balance,
+            Currency = (CurrencyEnum)x.currency,
             CreatedAt = (DateTime)x.created_at,
         };
     }
     
-    public async Task<bool> Create(UserModel user)
+    public async Task<bool> Create(AccountModel Account)
     {
-        var query = "INSERT INTO users (username, password, full_name, email)"
-            + " VALUES(@username,  @Password,  @FullName, @Email)";
+        var query = "INSERT INTO accounts (user_id, balance, currency)"
+            + " VALUES(@UserId,  @Balance,  @Currency)";
         var parameters = new DynamicParameters();
-        parameters.Add("UserName", user.UserName);
-        parameters.Add("Password", user.Password);
-        parameters.Add("FullName", user.FullName);
-        parameters.Add("Email", user.Email);
+        parameters.Add("UserId", Account.UserId);
+        parameters.Add("Balance", Account.Balance);
+        parameters.Add("Currency", Account.Currency);
 
         using (var connection = _db.GetSqlConnection(_connectionId))
         {
             var result = await connection.ExecuteAsync(query, parameters);
             if (result > 0)
             {
-                await _cache.SetRecordAsync(_caheKey + user.Id, user);
+                await _cache.SetRecordAsync(_caheKey + Account.Id, Account);
                 return true;
             }
             return false;
         }
     }
 
-    public async Task<bool> Update(UserModel user)
+    public async Task<bool> Update(AccountModel Account)
     {
-        var query = "UPDATE users SET username=@username, password=@Password, full_name=@FullName" +
-            ", email=@Email WHERE id=@Id";
+        var query = "UPDATE accounts SET balance=@Balance" +
+            ", WHERE id=@Id";
         var parameters = new DynamicParameters();
-        parameters.Add("Id", user.Id);
-        parameters.Add("UserName", user.UserName);
-        parameters.Add("Password", user.Password);
-        parameters.Add("FullName", user.FullName);
-        parameters.Add("Email", user.Email);
+        parameters.Add("Id", Account.Id);
+        parameters.Add("Balance", Account.Balance);
         
         using (var connection = _db.GetSqlConnection(_connectionId))
         {
             var result = await connection.ExecuteAsync(query, parameters);
             if (result > 0)
             {
-                await _cache.RemoveAsync(_caheKey+ user.Id);
-                await _cache.SetRecordAsync(_caheKey + user.Id, user);
+                await _cache.RemoveAsync(_caheKey+ Account.Id);
+                await _cache.SetRecordAsync(_caheKey + Account.Id, Account);
                 return true;
             }
             return false;
@@ -133,7 +128,7 @@ public class UserCacheRepository : IUserRepository
     public async Task<bool> Delete(int id)
     {
 
-        var query = "DELETE FROM users WHERE id=@Id";
+        var query = "DELETE FROM accounts WHERE id=@Id";
         var parameters = new DynamicParameters();
         parameters.Add("id", id);
 

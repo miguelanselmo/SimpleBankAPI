@@ -15,10 +15,10 @@ public class UserController : ControllerBase
     private readonly ILogger<UserController> _logger;
     private readonly IUserUseCase _useCase;
 
-    public UserController(ILogger<UserController> logger, IUserUseCase _useCase)
+    public UserController(ILogger<UserController> logger, IUserUseCase useCase)
     {
         _logger = logger;
-        _useCase = _useCase;
+        _useCase = useCase;
     }
 
 

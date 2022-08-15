@@ -43,7 +43,9 @@ public class AccountUseCase : IAccountUseCase
     {
         var result = await _accountRepository.ReadById(id);
         if (result is not null)
-            return (true, null, result, null);
+        {
+            return (true, null, result, await _movementRepository.ReadByAccount(id));
+        }
         else
             return (false, "Account not found.", null, null);
     }

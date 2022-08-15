@@ -22,7 +22,7 @@ public class AccountController : Controller
 
     //[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [HttpPost(Name = "CreateAccount")]
-    [ProducesResponseType(typeof(IEnumerable<bool>), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(IEnumerable<createAccountResponse>), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(string), StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
@@ -58,14 +58,20 @@ public class AccountController : Controller
     //[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [HttpGet(Name = "GetAccounts")]
     [ProducesResponseType(typeof(IEnumerable<account>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(registerResponse), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(string), StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<AccountModel>> Get(int userId)
     {
         try
         {
             var result = await _useCase.GetAccounts(userId);
-            return Ok(result.Item3);
+            return Ok(result.Item3.Select(x => new account
+            {
+                account_id = x.Id,
+                balance = x.Balance,
+                currency = x.Currency.ToString(),
+                created_at = x.CreatedAt
+            }));
         }
         catch (Exception ex)
         {
@@ -77,11 +83,9 @@ public class AccountController : Controller
     //[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [HttpGet("{id}", Name = "GetAccount")]
     [ProducesResponseType(typeof(account), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(IEnumerable<AccountModel>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(IEnumerable<AccountModel>), StatusCodes.Status404NotFound)]
-    [ProducesResponseType(typeof(registerResponse), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(string), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(string), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
-
     public async Task<ActionResult<AccountModel>> GetById(int id)
     {
         try
@@ -90,7 +94,18 @@ public class AccountController : Controller
             if (result.Item3 is null)
                 return NotFound(result.Item2);
             else
-                return Ok(result.Item3);
+                return Ok(new account
+                {
+                    account_id = result.Item3.Id,
+                    balance = result.Item3.Balance,
+                    currency = result.Item3.Currency.ToString(),
+                    created_at = result.Item3.CreatedAt,
+                    movs = result.Item4.Select(x => new movements
+                    {
+                        amount = x.Amount,
+                        created_at = x.CreatedAt
+                    })
+                });
         }
         catch (Exception ex)
         {
@@ -118,5 +133,12 @@ public struct account
     public int account_id { get; set; }
     public decimal balance { get; set; }
     public string currency { get; set; }
+    public DateTime created_at { get; set; }
+    public IEnumerable<movements> movs { get; set; }
+}
+
+public struct movements
+{
+    public decimal amount { get; set; }
     public DateTime created_at { get; set; }
 }

@@ -5,8 +5,8 @@ namespace SimpleBankAPI.Repositories;
 public interface ITransferRepository
 {
     Task<bool> Delete(int id);
-    Task<TransferModel?> Read(int id);
-    Task<IEnumerable<TransferModel>> Read();
-    Task<bool> Create(TransferModel transfer);
-    Task<bool> Update(TransferModel transfer);
+    Task<TransferModel?> ReadById(int id);
+    Task<IEnumerable<TransferModel>> ReadAll();
+    Task<bool> Create(TransferModel dataModel);
+    Task<bool> Update(TransferModel dataModel);
 }

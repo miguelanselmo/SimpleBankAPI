@@ -25,7 +25,7 @@ public class TransferController : Controller
     {
         try
         {
-            var transfers = await _repository.Read();
+            var transfers = await _repository.ReadAll();
             return Ok(transfers);
         }
         catch (Exception ex)
@@ -42,7 +42,7 @@ public class TransferController : Controller
     {
         try
         {
-            var transfer = await _repository.Read(id);
+            var transfer = await _repository.ReadById(id);
             if (transfer is null)
             {
                 return NotFound();

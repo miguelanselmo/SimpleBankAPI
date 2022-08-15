@@ -5,6 +5,7 @@ using Microsoft.OpenApi.Models;
 using SimpleBankAPI.Models;
 using SimpleBankAPI.Repositories;
 using SimpleBankAPI.Repositories.SqlDataAccess;
+using SimpleBankAPI.Usecases;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -16,6 +17,11 @@ builder.Services.AddSingleton<ISqlDataAccess, SqlDataAccess>();
 builder.Services.AddScoped<IUserRepository, UserCacheRepository>();
 builder.Services.AddScoped<IAccountRepository, AccountCacheRepository>();
 builder.Services.AddScoped<ITransferRepository, TransferCacheRepository>();
+builder.Services.AddScoped<IMovementRepository, MovementCacheRepository>();
+
+builder.Services.AddScoped<IAccountUseCase, AccountUseCase>();
+builder.Services.AddScoped<IUserUseCase, UserUseCase>();
+
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
 {

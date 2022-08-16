@@ -7,13 +7,13 @@ public class AccountUseCase : IAccountUseCase
 {
     private readonly ILogger<AccountUseCase> _logger;
     private readonly IAccountRepository _accountRepository;
-    private readonly ITransferRepository _transferRepository;
+    //private readonly ITransferRepository _transferRepository;
     private readonly IMovementRepository _movementRepository;
     public AccountUseCase(ILogger<AccountUseCase> logger, IAccountRepository accountRepository, ITransferRepository transferRepository, IMovementRepository movementRepository)
     {
         _logger = logger;
         _accountRepository = accountRepository;
-        _transferRepository = transferRepository;
+        //_transferRepository = transferRepository;
         _movementRepository = movementRepository;
     }
     

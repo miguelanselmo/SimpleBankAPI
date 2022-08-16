@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SimpleBankAPI.Models;
 using SimpleBankAPI.Models.Enums;
@@ -20,13 +21,13 @@ public class AccountController : Controller
         _useCase = useCase;
     }
 
-    //[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [HttpPost(Name = "CreateAccount")]
     [ProducesResponseType(typeof(IEnumerable<createAccountResponse>), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(string), StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<bool>> Post([FromBody] createAccountRequest request)
+    public async Task<ActionResult<createAccountResponse>> Post([FromBody] createAccountRequest request)
     {
         try
         {
@@ -55,12 +56,12 @@ public class AccountController : Controller
         }
     }
 
-    //[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [HttpGet(Name = "GetAccounts")]
     [ProducesResponseType(typeof(IEnumerable<account>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(string), StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<AccountModel>> Get(int userId)
+    public async Task<ActionResult<IEnumerable<account>>> Get(int userId)
     {
         try
         {
@@ -80,13 +81,13 @@ public class AccountController : Controller
         }
     }
 
-    //[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [HttpGet("{id}", Name = "GetAccount")]
     [ProducesResponseType(typeof(account), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(string), StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(typeof(string), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<AccountModel>> GetById(int id)
+    public async Task<ActionResult<account>> GetById(int id)
     {
         try
         {

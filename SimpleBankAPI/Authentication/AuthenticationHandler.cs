@@ -11,11 +11,15 @@ namespace SimpleBankAPI.Authentication
         private static string? issuer;
         private static string? audience;
         private static string? key;
+        private static int? accessTokenDuration;
+        private static int? refreshTokenDuration;
         public static void Configure(IConfiguration config)
         {
             issuer = config["Jwt:Issuer"];
             audience = config["Jwt:Audience"];
             key = config["Jwt:Key"];
+            accessTokenDuration = int.Parse(config["Jwt:AccessTokenDuration"]);
+            refreshTokenDuration = int.Parse(config["Jwt:RefreshTokenDuration"]);
         }
 
         public static string GenerateToken()
@@ -45,23 +49,27 @@ namespace SimpleBankAPI.Authentication
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
-        public static string GenerateToken(UserModel user)
+        public static string GenerateToken(string userName)
         {
             var claims = new[]
             {
-            new Claim(ClaimTypes.Name, user.UserName),
-            new Claim(ClaimTypes.NameIdentifier,Guid.NewGuid().ToString())
-        };
+                new Claim(ClaimTypes.Name, userName),
+                /*new Claim(ClaimTypes.Expiration, userName),
+                new Claim(ClaimTypes.Email, userName),
+                new Claim(ClaimTypes., userName),*/
+                new Claim(ClaimTypes.NameIdentifier,Guid.NewGuid().ToString())
+            };
 
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key));
 
             var credentials = new SigningCredentials(securityKey,
                 SecurityAlgorithms.HmacSha256);
 
-            var token = new JwtSecurityToken(issuer: issuer,
+            var token = new JwtSecurityToken(
+                issuer: issuer,
                 audience: audience,
                 claims: claims,
-                expires: DateTime.Now.AddMinutes(20),
+                expires: DateTime.Now.AddMinutes((double)accessTokenDuration),
                 signingCredentials: credentials);
 
             var tokenHandler = new JwtSecurityTokenHandler();

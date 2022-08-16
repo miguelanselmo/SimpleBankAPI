@@ -32,11 +32,12 @@ CREATE TABLE public.movements (
 	id serial4 NOT NULL,
 	account_id int NOT NULL,
 	amount decimal NOT NULL,
+	balance decimal NOT NULL,
 	created_at timestamptz NOT NULL DEFAULT now(),
 	CONSTRAINT movements_pkey PRIMARY KEY (id),
 	CONSTRAINT movements_fkey FOREIGN KEY(account_id) REFERENCES accounts(id)
 );
-
+/*
 CREATE TABLE public.transfers (
 	id serial4 NOT NULL,
 	from_account_id int NOT NULL,
@@ -46,6 +47,13 @@ CREATE TABLE public.transfers (
 	CONSTRAINT transfers_pkey PRIMARY KEY (id),
 	CONSTRAINT transfers_fkey FOREIGN KEY(from_account_id) REFERENCES accounts(id),
 	CONSTRAINT transfers_fkey2 FOREIGN KEY(to_account_id) REFERENCES accounts(id)
+);
+*/
+CREATE TABLE public.operations_log (
+	id serial4 NOT NULL,
+	data json NOT NULL,
+	created_at timestamptz NOT NULL DEFAULT now(),
+	CONSTRAINT transfers_pkey PRIMARY KEY (id),
 );
 
 CREATE TABLE public.sessions (

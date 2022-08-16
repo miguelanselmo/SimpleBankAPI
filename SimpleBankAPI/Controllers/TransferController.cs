@@ -1,5 +1,8 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Primitives;
 using SimpleBankAPI.Models;
 using SimpleBankAPI.Repositories;
 
@@ -11,6 +14,7 @@ public class TransferController : Controller
 {
     private readonly ILogger<TransferController> _logger;
     private readonly ITransferRepository _repository;
+    //private readonly ITransferUseCase _useCase;
 
     public TransferController(ILogger<TransferController> logger, ITransferRepository repository)
     {
@@ -18,50 +22,43 @@ public class TransferController : Controller
         _repository = repository;
     }
 
-    //[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-    [HttpGet(Name = "GetTransfers")]
-    [ProducesResponseType(typeof(IEnumerable<TransferModel>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<TransferModel>> Get()
-    {
-        try
-        {
-            var transfers = await _repository.ReadAll();
-            return Ok(transfers);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex.Message, ex.InnerException);
-            return Problem(ex.Message);
-        }
-    }
 
-    //[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-    [HttpGet("{id}", Name = "GetTransfer")]
-    [ProducesResponseType(typeof(TransferModel), StatusCodes.Status200OK)]
-    public async Task<ActionResult<TransferModel>> GetById(int id)
-    {
-        try
-        {
-            var transfer = await _repository.ReadById(id);
-            if (transfer is null)
-            {
-                return NotFound();
-            }
-            return Ok(transfer);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex.Message, ex.InnerException);
-            return Problem(ex.Message);
-        }
-    }
-
-    //[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [HttpPost(Name = "CreateTransfer")]
-    [ProducesResponseType(typeof(IEnumerable<bool>), StatusCodes.Status201Created)]
-    public async Task<ActionResult<bool>> Post([FromBody] TransferModel transfer)
+    [ProducesResponseType(typeof(bool), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(string), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<bool>> Post([FromBody] transferRequest request)
     {
-        return await _repository.Create(transfer);
-    }
+        try
+        {
+            if (Request.Headers.TryGetValue("Authorization", out StringValues authToken))
+            {
+                string authHeader = authToken.First();
+                string token = authHeader.Substring("Bearer ".Length).Trim();
+            }
+            else
+                return BadRequest("Missing Authorization Header.");
+            var dataModel = new TransferModel
+            {
+                Amount = request.amount,
+                FromAccountId = request.from_account_id,
+                ToAccountId = request.to_account_id
+            };
+            return await _repository.Create(dataModel);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex.Message, ex.InnerException);
+            return Problem(ex.Message);
+        }
+   }
+}
 
+public struct transferRequest
+{
+    public decimal amount { get; set; }
+    public int from_account_id { get; set; }
+    public int to_account_id { get; set; }    
 }

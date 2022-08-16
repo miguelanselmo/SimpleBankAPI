@@ -7,6 +7,6 @@ public interface IUserUseCase
 {
     public Task<(bool, string?, UserModel?)> CreateUser(UserModel user);
 
-    public Task<(bool, string?)> Login(UserModel user);
+    public Task<(bool, string?, UserModel?, SessionModel?)> Login(UserModel user);
 
 }

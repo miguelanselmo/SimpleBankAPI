@@ -61,7 +61,7 @@ public class UserController : ControllerBase
 
     //[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [HttpPost("login", Name = "Login")]
-    [ProducesResponseType(typeof(registerResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(loginResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(string), StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
@@ -69,7 +69,6 @@ public class UserController : ControllerBase
     {
         try
         {
-
             UserModel dataModel = new UserModel
             {
 
@@ -79,11 +78,20 @@ public class UserController : ControllerBase
             var result = await _useCase.Login(dataModel);
             if (result.Item1)
             {
+                //Response.Headers.Add("Authorization", (result.Item2);
                 loginResponse response = new loginResponse
-                {/*
-                        access_token = result.
-                        access_token_expires_at =
-                        session_id = */
+                {
+                    access_token = result.Item4.TokenAccess,
+                    access_token_expires_at = result.Item4.TokenAccessExpireAt,
+                    session_id = result.Item4.SessionId.ToString(),
+                    user = new registerResponse
+                    {
+                        user_id = result.Item3.Id,
+                        user_name = result.Item3.UserName,
+                        email = result.Item3.Email,
+                        full_name = result.Item3.FullName,
+                        created_at = result.Item3.CreatedAt
+                    }
                 };
                 return Ok(response);
             }

@@ -9,9 +9,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Authentication\**" />
     <Compile Remove="Models\Dtos\**" />
+    <Content Remove="Authentication\**" />
     <Content Remove="Models\Dtos\**" />
+    <EmbeddedResource Remove="Authentication\**" />
     <EmbeddedResource Remove="Models\Dtos\**" />
+    <None Remove="Authentication\**" />
     <None Remove="Models\Dtos\**" />
   </ItemGroup>
 

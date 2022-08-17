@@ -2,10 +2,9 @@
 using Microsoft.Extensions.Caching.Distributed;
 using SimpleBankAPI.Models;
 using SimpleBankAPI.Models.Enums;
-using SimpleBankAPI.Repositories.Cache;
 using SimpleBankAPI.Repositories.SqlDataAccess;
 
-namespace SimpleBankAPI.Repositories;
+namespace SimpleBankAPI.Repositories.Cache;
 
 public class AccountCacheRepository : IAccountRepository
 {
@@ -14,21 +13,21 @@ public class AccountCacheRepository : IAccountRepository
     private const string _connectionId = "BankDB";
     private const string _caheKey = "Account";
 
-
     public AccountCacheRepository(ISqlDataAccess db, IDistributedCache cache)
     {
         _db = db;
         _cache = cache;
     }
 
-    public async Task<AccountModel?> ReadById(int id)
+    public async Task<AccountModel?> ReadById(int userId, int id)
     {
-        var resultCache = await _cache.GetRecordAsync<AccountModel[]>(_caheKey);
+        var resultCache = await _cache.GetRecordAsync<AccountModel[]>(_caheKey + id);
         if (resultCache is null)
         {
-            var query = "SELECT * FROM accounts WHERE id=@id";
+            var query = "SELECT * FROM accounts WHERE id=@id AND user_id=@user_id";
             var parameters = new DynamicParameters();
             parameters.Add("id", id);
+            parameters.Add("user_id", userId);
             using (var connection = _db.GetSqlConnection(_connectionId))
             {
                 var resultDb = await connection.QueryFirstOrDefaultAsync<object>(query, parameters);
@@ -44,7 +43,7 @@ public class AccountCacheRepository : IAccountRepository
 
     public async Task<IEnumerable<AccountModel?>> ReadByUserId(int userId)
     {
-        var resultCache = await _cache.GetRecordAsync<AccountModel[]>(_caheKey);
+        var resultCache = await _cache.GetRecordAsync<AccountModel[]>(_caheKey + userId);
         if (resultCache is null)
         {
             var query = "SELECT * FROM accounts WHERE user_id=@user_id";
@@ -53,16 +52,15 @@ public class AccountCacheRepository : IAccountRepository
             using (var connection = _db.GetSqlConnection(_connectionId))
             {
                 var resultDb = await connection.QueryAsync<object>(query, parameters);
-                //var resultDb = await connection.QueryAsync<object>(query, parameters);
                 IEnumerable<AccountModel> dataModel = Map(resultDb);
-                //await _cache.SetRecordAsync(_caheKey+id, dataModel);
+                await _cache.SetRecordAsync(_caheKey + userId, dataModel);
                 return dataModel;
             }
         }
         else
             return resultCache.Where(x => x.UserId.Equals(userId));
     }
-    
+
     public async Task<IEnumerable<AccountModel>> ReadAll()
     {
         var resultCache = await _cache.GetRecordAsync<AccountModel[]>(_caheKey);
@@ -94,7 +92,7 @@ public class AccountCacheRepository : IAccountRepository
         });
         return AccountList;
     }
-    
+
     private static AccountModel Map(dynamic x)
     {
         if (x is null) return null;
@@ -107,8 +105,8 @@ public class AccountCacheRepository : IAccountRepository
             CreatedAt = (DateTime)x.created_at,
         };
     }
-    
-    public async Task<(bool,int?)> Create(AccountModel dataModel)
+
+    public async Task<(bool, int?)> Create(AccountModel dataModel)
     {
         var query = "INSERT INTO accounts (user_id, balance, currency)"
             + " VALUES(@UserId,  @Balance,  @Currency) RETURNING id";
@@ -122,11 +120,11 @@ public class AccountCacheRepository : IAccountRepository
             var result = await connection.ExecuteScalarAsync<int>(query, parameters);
             if (result > 0)
             {
-                //await _cache.SetRecordAsync(_caheKey + dataModel.Id, dataModel);
-                await _cache.RemoveAsync(_caheKey);
+                await _cache.SetRecordAsync(_caheKey + dataModel.Id, dataModel);
+                //await _cache.RemoveAsync(_caheKey);
                 return (true, result);
             }
-            return (false,null);
+            return (false, null);
         }
     }
 
@@ -137,7 +135,7 @@ public class AccountCacheRepository : IAccountRepository
         var parameters = new DynamicParameters();
         parameters.Add("Id", dataModel.Id);
         parameters.Add("Balance", dataModel.Balance);
-        
+
         using (var connection = _db.GetSqlConnection(_connectionId))
         {
             var result = await connection.ExecuteAsync(query, parameters);
@@ -168,5 +166,15 @@ public class AccountCacheRepository : IAccountRepository
             }
             return false;
         }
+    }
+
+    public Task<AccountModel?> ReadById(int id)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<IEnumerable<AccountModel?>> ReadByUser(int userId)
+    {
+        throw new NotImplementedException();
     }
 }

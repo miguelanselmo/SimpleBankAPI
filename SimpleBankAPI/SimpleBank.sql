@@ -59,11 +59,9 @@ CREATE TABLE public.operations_log (
 CREATE TABLE public.sessions (
 	id uuid NOT NULL,
 	user_id int NOT NULL,
-	refresh_token varchar NOT NULL,
 	user_agent varchar NOT NULL,
 	client_ip varchar NOT NULL,
 	active bool NOT NULL DEFAULT true,
-	expires_at timestamptz NOT NULL,
 	created_at timestamptz NOT NULL DEFAULT now(),
 	CONSTRAINT sessions_pkey PRIMARY KEY (id),
 	CONSTRAINT sessions_fkey FOREIGN KEY(user_id) REFERENCES users(id)

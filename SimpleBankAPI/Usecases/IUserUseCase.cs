@@ -5,8 +5,8 @@ namespace SimpleBankAPI.Usecases;
 
 public interface IUserUseCase
 {
-    public Task<(bool, string?, UserModel?)> CreateUser(UserModel user);
+    Task<(bool, string?, UserModel?)> CreateUser(UserModel user);
 
-    public Task<(bool, string?, UserModel?, SessionModel?)> Login(UserModel user);
+    Task<(bool, string?, UserModel?, SessionModel?)> Login(UserModel user);
 
 }

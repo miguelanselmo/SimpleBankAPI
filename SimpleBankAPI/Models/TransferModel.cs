@@ -7,4 +7,5 @@ public class TransferModel
     public int ToAccountId { get; set; }
     public decimal Amount { get; set; }
     public DateTime CreatedAt { get; set; }
+    public int UserId { get; set; }
 }

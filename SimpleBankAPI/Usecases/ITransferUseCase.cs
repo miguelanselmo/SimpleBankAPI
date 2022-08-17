@@ -5,6 +5,6 @@ namespace SimpleBankAPI.Usecases;
 
 public interface ITransferUseCase
 {
-    public Task<(bool, string?, TransferModel?)> Transfer(TransferModel transfer);
+    Task<(bool, string?)> Transfer(TransferModel transfer);
 
 }

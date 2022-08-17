@@ -8,4 +8,5 @@ public class SessionModel
     public string TokenRefresh { get; set; }
     public DateTime TokenRefreshExpireAt { get; set; }
     public Guid SessionId { get; set; }
+    public int UserId { get; set; }
 }

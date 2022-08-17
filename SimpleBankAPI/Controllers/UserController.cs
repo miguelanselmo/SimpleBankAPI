@@ -12,13 +12,13 @@ namespace SimpleBankAPI.Controllers;
 [ApiController]
 public class UserController : ControllerBase
 {
-    private readonly ILogger<UserController> _logger;
-    private readonly IUserUseCase _useCase;
+    private readonly ILogger<UserController> logger;
+    private readonly IUserUseCase useCase;
 
     public UserController(ILogger<UserController> logger, IUserUseCase useCase)
     {
-        _logger = logger;
-        _useCase = useCase;
+        this.logger = logger;
+        this.useCase = useCase;
     }
 
 
@@ -38,7 +38,7 @@ public class UserController : ControllerBase
                 Password = request.password,
                 FullName = request.full_name
             };
-            var result = await _useCase.CreateUser(dataModel);
+            var result = await useCase.CreateUser(dataModel);
             if (result.Item1)
             {
                 return Ok(new registerResponse
@@ -54,7 +54,7 @@ public class UserController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex.Message, ex.InnerException);
+            logger.LogError(ex.Message, ex.InnerException);
             return Problem(ex.Message);
         }
     }
@@ -75,7 +75,7 @@ public class UserController : ControllerBase
                 UserName = request.user_name,
                 Password = request.password
             };
-            var result = await _useCase.Login(dataModel);
+            var result = await useCase.Login(dataModel);
             if (result.Item1)
             {
                 //Response.Headers.Add("Authorization", (result.Item2);
@@ -100,7 +100,7 @@ public class UserController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex.Message, ex.InnerException);
+            logger.LogError(ex.Message, ex.InnerException);
             return Problem(ex.Message);
         }
     }

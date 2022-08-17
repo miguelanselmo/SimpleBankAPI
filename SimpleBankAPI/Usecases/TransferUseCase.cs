@@ -8,22 +8,66 @@ namespace SimpleBankAPI.Usecases;
 
 public class TransferUseCase : ITransferUseCase
 {
-    private readonly ILogger<TransferUseCase> _logger;
-    private readonly IUserRepository _repository;
-    private readonly IAccountRepository _accountRepository;
-    private readonly ITransferRepository _transferRepository;
-    private readonly IMovementRepository _movementRepository;
+    private readonly ILogger<TransferUseCase> logger;
+    private readonly IUserRepository repository;
+    private readonly IAccountRepository accountRepository;
+    private readonly IMovementRepository movementRepository;
 
-    public TransferUseCase(ILogger<TransferUseCase> logger, IAccountRepository accountRepository, ITransferRepository transferRepository, IMovementRepository movementRepository)
+    public TransferUseCase(ILogger<TransferUseCase> logger, IAccountRepository accountRepository, IMovementRepository movementRepository)
     {
-        _logger = logger;
-        _accountRepository = accountRepository;
-        _transferRepository = transferRepository;
-        _movementRepository = movementRepository;
+        this.logger = logger;
+        this.accountRepository = accountRepository;
+        this.movementRepository = movementRepository;
     }
 
-    public async Task<(bool,string?, TransferModel?)> Transfer(TransferModel transfer)
+    public async Task<(bool, string?)> Transfer(TransferModel transfer)
     {
-        return (false, "", null);
-    }    
+        var result = await accountRepository.ReadById(transfer.UserId, transfer.FromAccountId);
+        if (result is null)
+            return (false, "Account not found.");
+        if (transfer.Amount > result.Balance)
+            return (false, "Balance below amount.");
+        var resultTo = await accountRepository.ReadById(transfer.ToAccountId);
+        if (resultTo is null)
+            return (false, "Destination account not found.");
+        if (result.Currency != resultTo.Currency)
+            return (false, "Account with different currencies.");
+        var resultMov = await movementRepository.Create(
+            new MovementModel
+            {
+                AccountId = transfer.ToAccountId,
+                Amount = transfer.Amount * -1,
+                Balance = result.Balance - transfer.Amount,
+            });
+        if (!resultMov.Item1)
+            return (false, "Transfer error.");
+        resultMov = await movementRepository.Create(
+            new MovementModel
+            {
+                AccountId = transfer.FromAccountId,
+                Amount = transfer.Amount,
+                Balance = result.Balance + transfer.Amount,
+            });
+        if (!resultMov.Item1)
+            return (false, "Transfer error.");
+
+        var resultAcc = await accountRepository.Update(
+            new AccountModel
+            {
+                Id = transfer.FromAccountId,
+                Balance = result.Balance - transfer.Amount,
+            });
+        if (!resultAcc)
+            return (false, "Transfer error.");
+
+        resultAcc = await accountRepository.Update(
+            new AccountModel
+            {
+                Id = transfer.ToAccountId,
+                Balance = result.Balance + transfer.Amount,
+            });
+        if (!resultAcc)
+            return (false, "Transfer error.");
+        return (true, null);
+    }
 }

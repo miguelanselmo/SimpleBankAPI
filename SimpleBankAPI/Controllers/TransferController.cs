@@ -4,7 +4,9 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Primitives;
 using SimpleBankAPI.Models;
+using SimpleBankAPI.Providers;
 using SimpleBankAPI.Repositories;
+using SimpleBankAPI.Usecases;
 
 namespace SimpleBankAPI.Controllers;
 
@@ -12,45 +14,51 @@ namespace SimpleBankAPI.Controllers;
 [ApiController]
 public class TransferController : Controller
 {
-    private readonly ILogger<TransferController> _logger;
-    private readonly ITransferRepository _repository;
-    //private readonly ITransferUseCase _useCase;
-
-    public TransferController(ILogger<TransferController> logger, ITransferRepository repository)
+    private readonly ILogger<TransferController> logger;
+    private readonly ITransferRepository repository;
+    private readonly ITransferUseCase useCase;
+    private readonly IAuthenticationProvider provider;
+    
+        public TransferController(ILogger<TransferController> logger, ITransferUseCase useCase, IAuthenticationProvider provider)
     {
-        _logger = logger;
-        _repository = repository;
+        this.logger = logger;
+        this.useCase = useCase;
+        this.provider = provider;
     }
 
 
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [HttpPost(Name = "CreateTransfer")]
-    [ProducesResponseType(typeof(bool), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(string), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(string), StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<bool>> Post([FromBody] transferRequest request)
+    public async Task<ActionResult<string>> Post([FromBody] transferRequest request)
     {
         try
         {
-            if (Request.Headers.TryGetValue("Authorization", out StringValues authToken))
-            {
-                string authHeader = authToken.First();
-                string token = authHeader.Substring("Bearer ".Length).Trim();
-            }
-            else
+            if (!Request.Headers.TryGetValue("Authorization", out StringValues authToken))
                 return BadRequest("Missing Authorization Header.");
+            var resultAuth = provider.GetToken(authToken);
+            if (!resultAuth.Item1)
+                return BadRequest("Missing User info in Token.");
+            var resultClaims = provider.GetClaimUser(resultAuth.Item2);
+            if (!resultClaims.Item1)
+                return BadRequest("Missing User info in Token.");
+            
             var dataModel = new TransferModel
             {
                 Amount = request.amount,
                 FromAccountId = request.from_account_id,
-                ToAccountId = request.to_account_id
+                ToAccountId = request.to_account_id,
+                UserId = resultClaims.Item2.Id
             };
-            return await _repository.Create(dataModel);
+            var result = await useCase.Transfer(dataModel);
+            return result.Item1 ? Ok() : BadRequest(result.Item2);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex.Message, ex.InnerException);
+            logger.LogError(ex.Message, ex.InnerException);
             return Problem(ex.Message);
         }
    }

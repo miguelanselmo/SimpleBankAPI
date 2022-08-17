@@ -1,8 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Primitives;
 using SimpleBankAPI.Models;
 using SimpleBankAPI.Models.Enums;
+using SimpleBankAPI.Providers;
 using SimpleBankAPI.Repositories;
 using SimpleBankAPI.Usecases;
 
@@ -12,13 +14,16 @@ namespace SimpleBankAPI.Controllers;
 [ApiController]
 public class AccountController : Controller
 {
-    private readonly ILogger<AccountController> _logger;
-    private readonly IAccountUseCase _useCase;
+    private readonly ILogger<AccountController> logger;
+    private readonly IAccountUseCase useCase;
+    private readonly IAuthenticationProvider provider;
+    
 
-    public AccountController(ILogger<AccountController> logger, IAccountUseCase useCase)
+    public AccountController(ILogger<AccountController> logger, IAccountUseCase useCase, IAuthenticationProvider provider)
     {
-        _logger = logger;
-        _useCase = useCase;
+        this.logger = logger;
+        this.useCase = useCase;
+        this.provider = provider;
     }
 
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
@@ -31,19 +36,29 @@ public class AccountController : Controller
     {
         try
         {
+            if (!Request.Headers.TryGetValue("Authorization", out StringValues authToken))
+                return BadRequest("Missing Authorization Header.");
+            var resultAuth = provider.GetToken(authToken);
+            if (!resultAuth.Item1)
+                return BadRequest("Missing User info in Token.");
+            var resultClaims = provider.GetClaimUser(resultAuth.Item2);
+            if (!resultClaims.Item1)
+                return BadRequest("Missing User info in Token.");
+
             var dataModel = new AccountModel
             {
                 Balance = request.amount,
-                Currency = Enum.Parse<CurrencyEnum>(request.currency)
+                Currency = Enum.Parse<CurrencyEnum>(request.currency),
+                UserId = resultClaims.Item2.Id
             };
-            var result = await _useCase.CreateAccount(dataModel);
+            var result = await useCase.CreateAccount(dataModel);
             if (result.Item1)
             {
                 return Ok(new createAccountResponse
                 {
                     account_id = result.Item3.Id,
                     balance = result.Item3.Balance,
-                    currency = result.Item3.Currency.ToString()
+                    currency = result.Item3.Currency.ToString(),
                 });
             }
             else
@@ -51,7 +66,7 @@ public class AccountController : Controller
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex.Message, ex.InnerException);
+            logger.LogError(ex.Message, ex.InnerException);
             return Problem(ex.Message);
         }
     }
@@ -61,11 +76,20 @@ public class AccountController : Controller
     [ProducesResponseType(typeof(IEnumerable<account>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(string), StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<IEnumerable<account>>> Get(int userId)
+    public async Task<ActionResult<IEnumerable<account>>> Get()
     {
         try
         {
-            var result = await _useCase.GetAccounts(userId);
+            if (!Request.Headers.TryGetValue("Authorization", out StringValues authToken))
+                return BadRequest("Missing Authorization Header.");
+            var resultAuth = provider.GetToken(authToken);
+            if (!resultAuth.Item1)
+                return BadRequest("Missing User info in Token.");
+            var resultClaims = provider.GetClaimUser(resultAuth.Item2);
+            if (!resultClaims.Item1)
+                return BadRequest("Missing User info in Token.");
+
+            var result = await useCase.GetAccounts(resultClaims.Item2.Id);
             return Ok(result.Item3.Select(x => new account
             {
                 account_id = x.Id,
@@ -76,7 +100,7 @@ public class AccountController : Controller
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex.Message, ex.InnerException);
+            logger.LogError(ex.Message, ex.InnerException);
             return Problem(ex.Message);
         }
     }
@@ -91,7 +115,16 @@ public class AccountController : Controller
     {
         try
         {
-            var result = await _useCase.GetAccountDetails(id);
+            if (!Request.Headers.TryGetValue("Authorization", out StringValues authToken))
+                return BadRequest("Missing Authorization Header.");
+            var resultAuth = provider.GetToken(authToken);
+            if (!resultAuth.Item1)
+                return BadRequest("Missing User info in Token.");
+            var resultClaims = provider.GetClaimUser(resultAuth.Item2);
+            if (!resultClaims.Item1)
+                return BadRequest("Missing User info in Token.");
+
+            var result = await useCase.GetAccountMovements(resultClaims.Item2.Id, id);
             if (result.Item3 is null)
                 return NotFound(result.Item2);
             else
@@ -110,7 +143,7 @@ public class AccountController : Controller
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex.Message, ex.InnerException);
+            logger.LogError(ex.Message, ex.InnerException);
             return Problem(ex.Message);
         }
     }

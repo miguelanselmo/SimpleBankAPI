@@ -10,13 +10,9 @@
 
   <ItemGroup>
     <Compile Remove="Authentication\**" />
-    <Compile Remove="Models\Dtos\**" />
     <Content Remove="Authentication\**" />
-    <Content Remove="Models\Dtos\**" />
     <EmbeddedResource Remove="Authentication\**" />
-    <EmbeddedResource Remove="Models\Dtos\**" />
     <None Remove="Authentication\**" />
-    <None Remove="Models\Dtos\**" />
   </ItemGroup>
 
   <ItemGroup>
@@ -32,6 +28,10 @@
     <PackageReference Include="Npgsql" Version="6.0.6" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.2.3" />
     <PackageReference Include="System.Text.Json" Version="6.0.5" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Application\Interfaces\" />
   </ItemGroup>
 
 </Project>

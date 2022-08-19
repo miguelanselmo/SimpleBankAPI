@@ -2,12 +2,12 @@ using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using SimpleBankAPI.Models;
-using SimpleBankAPI.Providers;
-using SimpleBankAPI.Repositories;
-using SimpleBankAPI.Repositories.Cache;
-using SimpleBankAPI.Repositories.SqlDataAccess;
-using SimpleBankAPI.Usecases;
+using Npgsql;
+using SimpleBankAPI.Infrastructure.Providers;
+using SimpleBankAPI.Infrastructure.Repositories;
+using SimpleBankAPI.Infrastructure.Repositories.SqlDataAccess;
+using SimpleBankAPI.Core.Usecases;
+using System.Data;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -16,16 +16,26 @@ var builder = WebApplication.CreateBuilder(args);
 //builder.Services.AddFluentValidation(x => x.RegisterValidatorsFromAssemblyContaining<UserModel>());
 builder.Services.AddSingleton<IAuthenticationProvider, AuthenticationProvider>();
 
-builder.Services.AddSingleton<ISqlDataAccess, SqlDataAccess>();
+//builder.Services.AddSingleton<IConfiguration>(Configuration);
+//builder.Services.AddSingleton<NpgsqlConnection>();
+//builder.Services.AddSingleton<IDbConnection, DbConnection>();
+//builder.Services.AddSingleton<ISqlDataAccess, SqlDataAccess>();
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+builder.Services.AddScoped<IDbConnection>((s) => new NpgsqlConnection(builder.Configuration.GetConnectionString("BankDB")));
+builder.Services.AddScoped<IDbTransaction>(s =>
+{
+    //NpgsqlConnection connection = new(builder.Configuration.GetConnectionString("BankDB"));
+    NpgsqlConnection connection = (NpgsqlConnection)s.GetRequiredService<IDbConnection>();
+    connection.Open();
+    return connection.BeginTransaction();
+});
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IAccountRepository, AccountRepository>();
 //builder.Services.AddScoped<ITransferRepository, TransferRepository>();
 builder.Services.AddScoped<IMovementRepository, MovementRepository>();
-
 builder.Services.AddScoped<IUserUseCase, UserUseCase>();
 builder.Services.AddScoped<IAccountUseCase, AccountUseCase>();
 builder.Services.AddScoped<ITransferUseCase, TransferUseCase>();
-
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
 {

@@ -9,32 +9,32 @@ namespace SimpleBankAPI.Infrastructure.Providers;
 
 public class AuthenticationProvider : IAuthenticationProvider
 {
-    private readonly ILogger<AuthenticationProvider> logger;
-    private readonly IConfiguration config;
+    private readonly ILogger<AuthenticationProvider> _logger;
+    private readonly IConfiguration _config;
 
-    private static string? issuer;
-    private static string? audience;
-    private static string? key;
-    private static int? accessTokenDuration;
-    private static int? refreshTokenDuration;
+    private static string? _issuer;
+    private static string? _audience;
+    private static string? _key;
+    private static int? _accessTokenDuration;
+    private static int? _refreshTokenDuration;
 
     public AuthenticationProvider(ILogger<AuthenticationProvider> logger, IConfiguration config)
     {
-        this.logger = logger;
-        this.config = config;
-        issuer = config["Jwt:Issuer"];
-        audience = config["Jwt:Audience"];
-        key = config["Jwt:Key"];
-        accessTokenDuration = int.Parse(config["Jwt:AccessTokenDuration"]);
+        _logger = logger;
+        _config = config;
+        _issuer = config["Jwt:Issuer"];
+        _audience = config["Jwt:Audience"];
+        _key = config["Jwt:Key"];
+        _accessTokenDuration = int.Parse(config["Jwt:AccessTokenDuration"]);
     }
 
-    public (bool, UserModel?) GetClaimUser(string token)
+    public (bool, User?) GetClaimUser(string token)
     {
         try
         {
             var tokenHandler = new JwtSecurityTokenHandler();
             var securityToken = (JwtSecurityToken)tokenHandler.ReadToken(token);
-            return (true, new UserModel
+            return (true, new User
             {
                 UserName = securityToken.Claims.FirstOrDefault(c => c.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name")?.Value,
                 Id = int.Parse(securityToken.Claims.FirstOrDefault(c => c.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value)
@@ -58,9 +58,9 @@ public class AuthenticationProvider : IAuthenticationProvider
         return (token is not null, token);
     }
 
-    public SessionModel GenerateToken(UserModel user)
+    public Session GenerateToken(User user)
     {
-        DateTime expiredAt = DateTime.UtcNow.AddMinutes((double)accessTokenDuration);
+        DateTime expiredAt = DateTime.UtcNow.AddMinutes((double)_accessTokenDuration);
         Guid sessionId = Guid.NewGuid();
         var claims = new[]
         {
@@ -70,16 +70,16 @@ public class AuthenticationProvider : IAuthenticationProvider
         };
         var token = new JwtSecurityToken
         (
-            issuer: issuer,
-            audience: audience,
+            issuer: _issuer,
+            audience: _audience,
             claims: claims,
             expires: expiredAt,
             notBefore: DateTime.UtcNow,
             signingCredentials: new SigningCredentials(
-                new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key)),
+                new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_key)),
                 SecurityAlgorithms.HmacSha256)
         );
-        return new SessionModel
+        return new Session
         {
             TokenAccess = new JwtSecurityTokenHandler().WriteToken(token),
             TokenAccessExpireAt = expiredAt,

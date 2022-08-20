@@ -8,37 +8,36 @@ namespace SimpleBankAPI.Core.Usecases;
 
 public class TransferUseCase : ITransferUseCase
 {
-    private readonly ILogger<TransferUseCase> logger;
-    private readonly IUnitOfWork unitOfWork;
+    private readonly ILogger<TransferUseCase> _logger;
+    private readonly IUnitOfWork _unitOfWork;
 
     public TransferUseCase(ILogger<TransferUseCase> logger, IUnitOfWork unitOfWork)
     {
-        this.logger = logger;
-        this.unitOfWork = unitOfWork;
+        _logger = logger;
+        _unitOfWork = unitOfWork;
     }
 
-    public async Task<(bool, string?)> Transfer(TransferModel transfer)
+    public async Task<(bool, string?, Movement?)> Transfer(Transfer transfer)
     {
-        //TODO: rollback em caso de erro        
         bool commit = true;
         try
         {
-            unitOfWork.Begin();
+            _unitOfWork.Begin();
             if (transfer.ToAccountId == transfer.FromAccountId)
-            return (false, "The accounts are the same.");
-            var resultFrom = await unitOfWork.AccountRepository.ReadById(transfer.UserId, transfer.FromAccountId);
+            return (false, "The accounts are the same.", null);
+            var resultFrom = await _unitOfWork.AccountRepository.ReadById(transfer.UserId, transfer.FromAccountId);
             if (resultFrom is null)
-                return (false, "Account not found.");
+                return (false, "Account not found.", null);
             if (transfer.Amount > resultFrom.Balance)
-                return (false, "Balance below amount.");
-            var resultTo = await unitOfWork.AccountRepository.ReadById(transfer.ToAccountId);
+                return (false, "Balance below amount.", null);
+            var resultTo = await _unitOfWork.AccountRepository.ReadById(transfer.ToAccountId);
             if (resultTo is null)
-                return (false, "Destination account not found.");
+                return (false, "Destination account not found.", null);
             if (resultFrom.Currency != resultTo.Currency)
-                return (false, "Account with different currencies.");       
-            
-            var resultMov = await unitOfWork.MovementRepository.Create(
-                new MovementModel
+                return (false, "Account with different currencies.", null);
+
+            var resultMov = await _unitOfWork.MovementRepository.Create(
+                new Movement
                 {
                     AccountId = transfer.ToAccountId,
                     Amount = transfer.Amount,
@@ -46,50 +45,55 @@ public class TransferUseCase : ITransferUseCase
                 });
             commit = resultMov.Item1;
             if (!resultMov.Item1)
-                return (false, "Transfer error.");
-            resultMov = await unitOfWork.MovementRepository.Create(
-                new MovementModel
-                {
-                    AccountId = transfer.FromAccountId,
-                    Amount = transfer.Amount * -1,
-                    Balance = resultFrom.Balance - transfer.Amount,
-                });
+                return (false, "Transfer error.", null);
+
+            var movementTo = new Movement
+            {
+                AccountId = transfer.FromAccountId,
+                Amount = transfer.Amount * -1,
+                Balance = resultFrom.Balance - transfer.Amount,
+            };
+            resultMov = await _unitOfWork.MovementRepository.Create(movementTo);
             commit = resultMov.Item1;
             if (!resultMov.Item1)
-                return (false, "Transfer error.");
+                return (false, "Transfer error.", null);
 
-            var resultAcc = await unitOfWork.AccountRepository.Update(
-                new AccountModel
+            var resultAcc = await _unitOfWork.AccountRepository.Update(
+                new Account
                 {
                     Id = transfer.ToAccountId,
                     Balance = resultTo.Balance + transfer.Amount,
                 });
             commit = resultAcc;
             if (!resultAcc)
-                return (false, "Transfer error.");
-
-            resultAcc = await unitOfWork.AccountRepository.Update(
-            new AccountModel
-            {
-                Id = transfer.FromAccountId,
-                Balance = resultFrom.Balance - transfer.Amount,
-            });
+                return (false, "Transfer error.", null);
+            
+            resultAcc = await _unitOfWork.AccountRepository.Update(
+                new Account
+                {
+                    Id = transfer.FromAccountId,
+                    Balance = resultFrom.Balance - transfer.Amount,
+                });
             commit = resultAcc;
             if (!resultAcc)
-                return (false, "Transfer error.");
+                return (false, "Transfer error.", null);
 
-            //TODO: insert operation log
+            transfer.CreatedAt = movementTo.CreatedAt;
+            transfer.Id = movementTo.Id;
+            //_ = _unitOfWork.MovementRepository.CreateLog(transfer);
+
+            return (true, null, movementTo);
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error on transfer.");
-            unitOfWork.Rollback();
-            return (false, "Error on transfer.");
+            _logger.LogError(ex, "Error on transfer.");
+            _unitOfWork.Rollback();
+            return (false, "Error on transfer.", null);
         }
         finally
         {
-            if (commit) unitOfWork.Commit(); else unitOfWork.Rollback();
+            if (commit) _unitOfWork.Commit(); else _unitOfWork.Rollback();
         }
-        return (true, null);
+        
     }
 }

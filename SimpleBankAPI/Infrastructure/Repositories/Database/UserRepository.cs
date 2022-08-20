@@ -8,44 +8,41 @@ namespace SimpleBankAPI.Infrastructure.Repositories;
 
 public class UserRepository : IUserRepository
 {
-    //private readonly ISqlDataAccess db;
-    private readonly IDbTransaction dbTransaction;
-    //private const string connectionId = "BankDB";
+    private readonly IDbTransaction _dbTransaction;
 
-    public UserRepository(/*ISqlDataAccess db,*/ IDbTransaction dbTransaction)
+    public UserRepository(IDbTransaction dbTransaction)
     {
-        //this.db = db;
-        this.dbTransaction = dbTransaction;
+        _dbTransaction = dbTransaction;
     }
 
-    public async Task<UserModel?> ReadById(int id)
+    public async Task<User?> ReadById(int id)
     {
         var query = "SELECT * FROM users WHERE id=@id";
         var parameters = new DynamicParameters();
         parameters.Add("id", id);
-            var resultDb = await dbTransaction.Connection.QueryFirstOrDefaultAsync<object>(query, parameters, dbTransaction);
-            return Map(resultDb);
+        var resultDb = await _dbTransaction.Connection.QueryFirstOrDefaultAsync<object>(query, parameters);
+        return Map(resultDb);
     }
 
-    public async Task<UserModel?> ReadByName(string name)
+    public async Task<User?> ReadByName(string name)
     {
         var query = "SELECT * FROM users WHERE username=@username";
         var parameters = new DynamicParameters();
         parameters.Add("username", name);
-            var resultDb = await dbTransaction.Connection.QueryFirstOrDefaultAsync<object>(query, parameters, dbTransaction);
-            return Map(resultDb);
+        var resultDb = await _dbTransaction.Connection.QueryFirstOrDefaultAsync<object>(query, parameters);
+        return Map(resultDb);
     }
-    public async Task<IEnumerable<UserModel>> ReadAll()
+    public async Task<IEnumerable<User>> ReadAll()
     {
         var query = "SELECT * FROM users";
-            var resultDb = await dbTransaction.Connection.QueryAsync(query);
-            return Map(resultDb);
+        var resultDb = await _dbTransaction.Connection.QueryAsync(query);
+        return Map(resultDb);
     }
 
-    private static IEnumerable<UserModel> Map(IEnumerable<dynamic> dataDb)
+    private static IEnumerable<User> Map(IEnumerable<dynamic> dataDb)
     {
         if (dataDb is null) return null;
-        IEnumerable<UserModel> userList = dataDb.Select(x => new UserModel
+        IEnumerable<User> userList = dataDb.Select(x => new User
         {
             Id = (int)x.id,
             UserName = (string)x.username,
@@ -57,10 +54,10 @@ public class UserRepository : IUserRepository
         return userList;
     }
 
-    private static UserModel Map(dynamic x)
+    private static User Map(dynamic x)
     {
         if (x is null) return null;
-        return new UserModel
+        return new User
         {
             Id = (int)x.id,
             UserName = (string)x.username,
@@ -71,36 +68,31 @@ public class UserRepository : IUserRepository
         };
     }
 
-    public async Task<(bool, int?)> Create(UserModel dataModel)
+    public async Task<(bool, int?)> Create(User data)
     {
         var query = "INSERT INTO users (username, password, full_name, email)"
             + " VALUES(@username,  @password,  @full_name, @email) RETURNING id";
         var parameters = new DynamicParameters();
-        parameters.Add("username", dataModel.UserName);
-        parameters.Add("password", dataModel.Password);
-        parameters.Add("full_name", dataModel.FullName);
-        parameters.Add("email", dataModel.Email);
-
-            var result = await dbTransaction.Connection.ExecuteScalarAsync<int>(query, parameters, dbTransaction);
-            return result > 0 ? (true, result) : (false, null);
+        parameters.Add("username", data.UserName);
+        parameters.Add("password", data.Password);
+        parameters.Add("full_name", data.FullName);
+        parameters.Add("email", data.Email);
+        var result = await _dbTransaction.Connection.ExecuteScalarAsync<int>(query, parameters, _dbTransaction);
+        return result > 0 ? (true, result) : (false, null);
     }
 
-    public async Task<bool> Update(UserModel dataModel)
+    public async Task<bool> Update(User data)
     {
         var query = "UPDATE users SET username=@username, password=@password, full_name=@full_name" +
             ", email=@Email WHERE id=@id";
         var parameters = new DynamicParameters();
-        parameters.Add("id", dataModel.Id);
-        parameters.Add("username", dataModel.UserName);
-        parameters.Add("password", dataModel.Password);
-        parameters.Add("full_name", dataModel.FullName);
-        parameters.Add("email", dataModel.Email);
-
-        using (var connection = dbTransaction.Connection)
-        {
-            var result = await connection.ExecuteAsync(query, parameters, dbTransaction);
-            return result > 0;
-        }
+        parameters.Add("id", data.Id);
+        parameters.Add("username", data.UserName);
+        parameters.Add("password", data.Password);
+        parameters.Add("full_name", data.FullName);
+        parameters.Add("email", data.Email);
+        var result = await _dbTransaction.Connection.ExecuteAsync(query, parameters, _dbTransaction);
+        return result > 0;
     }
 
     public async Task<bool> Delete(int id)
@@ -109,11 +101,7 @@ public class UserRepository : IUserRepository
         var query = "DELETE FROM users WHERE id=@id";
         var parameters = new DynamicParameters();
         parameters.Add("id", id);
-
-        using (var connection = dbTransaction.Connection)
-        {
-            var result = await connection.ExecuteAsync(query, parameters, dbTransaction);
-            return result > 0;
-        }
+        var result = await _dbTransaction.Connection.ExecuteAsync(query, parameters, _dbTransaction);
+        return result > 0;
     }
 }

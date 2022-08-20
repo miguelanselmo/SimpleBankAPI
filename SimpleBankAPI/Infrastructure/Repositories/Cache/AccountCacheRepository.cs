@@ -20,9 +20,9 @@ public class AccountCacheRepository : IAccountRepository
         _cache = cache;
     }
 
-    public async Task<AccountModel?> ReadById(int userId, int id)
+    public async Task<Account?> ReadById(int userId, int id)
     {
-        var resultCache = await _cache.GetRecordAsync<AccountModel[]>(_caheKey + id);
+        var resultCache = await _cache.GetRecordAsync<Account[]>(_caheKey + id);
         if (resultCache is null)
         {
             var query = "SELECT * FROM accounts WHERE id=@id AND user_id=@user_id";
@@ -33,7 +33,7 @@ public class AccountCacheRepository : IAccountRepository
             {
                 var resultDb = await connection.QueryFirstOrDefaultAsync<object>(query, parameters);
                 //var resultDb = await connection.QueryAsync<object>(query, parameters);
-                AccountModel dataModel = Map(resultDb);
+                Account dataModel = Map(resultDb);
                 //await _cache.SetRecordAsync(_caheKey+id, dataModel);
                 return dataModel;
             }
@@ -42,9 +42,9 @@ public class AccountCacheRepository : IAccountRepository
             return resultCache.Where(x => x.Id.Equals(id)).FirstOrDefault();
     }
 
-    public async Task<IEnumerable<AccountModel?>> ReadByUserId(int userId)
+    public async Task<IEnumerable<Account?>> ReadByUserId(int userId)
     {
-        var resultCache = await _cache.GetRecordAsync<AccountModel[]>(_caheKey + userId);
+        var resultCache = await _cache.GetRecordAsync<Account[]>(_caheKey + userId);
         if (resultCache is null)
         {
             var query = "SELECT * FROM accounts WHERE user_id=@user_id";
@@ -53,7 +53,7 @@ public class AccountCacheRepository : IAccountRepository
             using (var connection = _db.GetSqlConnection(_connectionId))
             {
                 var resultDb = await connection.QueryAsync<object>(query, parameters);
-                IEnumerable<AccountModel> dataModel = Map(resultDb);
+                IEnumerable<Account> dataModel = Map(resultDb);
                 await _cache.SetRecordAsync(_caheKey + userId, dataModel);
                 return dataModel;
             }
@@ -62,16 +62,16 @@ public class AccountCacheRepository : IAccountRepository
             return resultCache.Where(x => x.UserId.Equals(userId));
     }
 
-    public async Task<IEnumerable<AccountModel>> ReadAll()
+    public async Task<IEnumerable<Account>> ReadAll()
     {
-        var resultCache = await _cache.GetRecordAsync<AccountModel[]>(_caheKey);
+        var resultCache = await _cache.GetRecordAsync<Account[]>(_caheKey);
         if (resultCache is null)
         {
             var query = "SELECT * FROM accounts";
             using (var connection = _db.GetSqlConnection(_connectionId))
             {
                 var resultDb = await connection.QueryAsync(query);
-                IEnumerable<AccountModel> dataModel = Map(resultDb);
+                IEnumerable<Account> dataModel = Map(resultDb);
                 await _cache.SetRecordAsync(_caheKey, dataModel);
                 return dataModel;
             }
@@ -80,34 +80,34 @@ public class AccountCacheRepository : IAccountRepository
             return Map(resultCache);
     }
 
-    private static IEnumerable<AccountModel> Map(IEnumerable<dynamic> dataDb)
+    private static IEnumerable<Account> Map(IEnumerable<dynamic> dataDb)
     {
         if (dataDb is null) return null;
-        IEnumerable<AccountModel> AccountList = dataDb.Select(x => new AccountModel
+        IEnumerable<Account> AccountList = dataDb.Select(x => new Account
         {
             Id = (int)x.id,
             UserId = (int)x.user_id,
             Balance = (decimal)x.balance,
-            Currency = Enum.Parse<CurrencyEnum>(x.currency),
+            Currency = Enum.Parse<Currency>(x.currency),
             CreatedAt = (DateTime)x.created_at
         });
         return AccountList;
     }
 
-    private static AccountModel Map(dynamic x)
+    private static Account Map(dynamic x)
     {
         if (x is null) return null;
-        return new AccountModel
+        return new Account
         {
             Id = (int)x.id,
             UserId = (int)x.user_id,
             Balance = (decimal)x.balance,
-            Currency = Enum.Parse<CurrencyEnum>(x.currency),
+            Currency = Enum.Parse<Currency>(x.currency),
             CreatedAt = (DateTime)x.created_at,
         };
     }
 
-    public async Task<(bool, int?)> Create(AccountModel dataModel)
+    public async Task<(bool, int?)> Create(Account dataModel)
     {
         var query = "INSERT INTO accounts (user_id, balance, currency)"
             + " VALUES(@UserId,  @Balance,  @Currency) RETURNING id";
@@ -129,7 +129,7 @@ public class AccountCacheRepository : IAccountRepository
         }
     }
 
-    public async Task<bool> Update(AccountModel dataModel)
+    public async Task<bool> Update(Account dataModel)
     {
         var query = "UPDATE accounts SET balance=@Balance" +
             ", WHERE id=@Id";
@@ -169,12 +169,12 @@ public class AccountCacheRepository : IAccountRepository
         }
     }
 
-    public Task<AccountModel?> ReadById(int id)
+    public Task<Account?> ReadById(int id)
     {
         throw new NotImplementedException();
     }
 
-    public Task<IEnumerable<AccountModel?>> ReadByUser(int userId)
+    public Task<IEnumerable<Account?>> ReadByUser(int userId)
     {
         throw new NotImplementedException();
     }

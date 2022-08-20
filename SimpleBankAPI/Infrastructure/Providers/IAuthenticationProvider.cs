@@ -6,7 +6,7 @@ namespace SimpleBankAPI.Infrastructure.Providers;
 public interface IAuthenticationProvider
 {
     bool ValidateToken();
-    SessionModel GenerateToken(UserModel user);
-    (bool, UserModel?) GetClaimUser(string token);
+    Session GenerateToken(User user);
+    (bool, User?) GetClaimUser(string token);
     (bool, string) GetToken(StringValues authToken);
 }

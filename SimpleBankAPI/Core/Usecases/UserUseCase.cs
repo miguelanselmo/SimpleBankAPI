@@ -1,5 +1,6 @@
 ﻿using Microsoft.IdentityModel.Tokens;
 using SimpleBankAPI.Core.Entities;
+using SimpleBankAPI.Infrastructure.Crypto;
 using SimpleBankAPI.Infrastructure.Providers;
 using SimpleBankAPI.Infrastructure.Repositories;
 using System.IdentityModel.Tokens.Jwt;
@@ -10,44 +11,55 @@ namespace SimpleBankAPI.Core.Usecases;
 
 public class UserUseCase : IUserUseCase
 {
-    private readonly ILogger<UserUseCase> logger;
-    private readonly IAuthenticationProvider provider;
-    private readonly IUnitOfWork unitOfWork;
+    private readonly ILogger<UserUseCase> _logger;
+    private readonly IAuthenticationProvider _provider;
+    private readonly IUnitOfWork _unitOfWork;
 
 
     public UserUseCase(ILogger<UserUseCase> logger, IAuthenticationProvider provider, IUnitOfWork unitOfWork)
     {
-        this.logger = logger;
-        this.provider = provider;
-        this.unitOfWork = unitOfWork;
+        _logger = logger;
+        _provider = provider;
+        _unitOfWork = unitOfWork;
     }
 
-    public async Task<(bool,string?, UserModel?)> CreateUser(UserModel user)
+    public async Task<(bool,string?, User?)> CreateUser(User user)
     {
-        var userDb = await unitOfWork.UserRepository.ReadByName(user.UserName);
-        if (userDb is null)
+        bool commit = false;
+        try
         {
-            var result = await unitOfWork.UserRepository.Create(user);
-            if (result.Item1)
+            _unitOfWork.Begin();
+            var userDb = await _unitOfWork.UserRepository.ReadByName(user.UserName);
+            if (userDb is null)
             {
-                user.Id = (int)result.Item2;
-                return (true, null, user);
+                user.Password = Crypto.HashSecret(user.Password);
+                var result = await _unitOfWork.UserRepository.Create(user);
+                if (result.Item1)
+                {
+                    commit = true;
+                    user.Id = (int)result.Item2;
+                    return (true, null, user);
+                }
+                else
+                    return (false, "User not created. Please try again.", null);
             }
             else
-                return (false, "User not created. Please try again.", null);
+                return (false, "Username already exists", null);
         }
-        else
-            return (false, "Username already exists", null);
+        finally
+        {
+            if (commit) _unitOfWork.Commit(); else _unitOfWork.Rollback();
+        }
     }
     
-    public async Task<(bool,string?,UserModel?,SessionModel?)> Login(UserModel user)
+    public async Task<(bool,string?,User?,Session?)> Login(User user)
     {
-        var userDb = await unitOfWork.UserRepository.ReadByName(user.UserName);
+        var userDb = await _unitOfWork.UserRepository.ReadByName(user.UserName);
         if (userDb is not null)
         {
-            if (userDb.Password.Equals(user.Password))
+            if (Crypto.VerifySecret(userDb.Password, user.Password))
             {
-                return (true, null, userDb, provider.GenerateToken(userDb));
+                return (true, null, userDb, _provider.GenerateToken(userDb));
             }
             else
                 return (false, "Invalid authentication", null, null);

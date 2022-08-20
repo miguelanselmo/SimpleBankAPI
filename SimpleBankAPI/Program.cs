@@ -9,11 +9,15 @@ using SimpleBankAPI.Infrastructure.Repositories.SqlDataAccess;
 using SimpleBankAPI.Core.Usecases;
 using System.Data;
 using System.Text;
+using SimpleBankAPI.WebApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-//builder.Services.AddFluentValidation(x => x.RegisterValidatorsFromAssemblyContaining<UserModel>());
+builder.Services.AddFluentValidation(x => x.RegisterValidatorsFromAssemblyContaining<registerRequest>());
+builder.Services.AddFluentValidation(x => x.RegisterValidatorsFromAssemblyContaining<loginRequest>());
+builder.Services.AddFluentValidation(x => x.RegisterValidatorsFromAssemblyContaining<createAccountRequest>());
+builder.Services.AddFluentValidation(x => x.RegisterValidatorsFromAssemblyContaining<transferRequest>());
 builder.Services.AddSingleton<IAuthenticationProvider, AuthenticationProvider>();
 
 //builder.Services.AddSingleton<IConfiguration>(Configuration);

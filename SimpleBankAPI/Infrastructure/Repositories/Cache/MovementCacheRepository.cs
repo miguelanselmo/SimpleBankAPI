@@ -21,9 +21,9 @@ public class MovementCacheRepository : IMovementRepository
         _cache = cache;
     }
 
-    public async Task<MovementModel?> Read(int id)
+    public async Task<Movement?> Read(int id)
     {
-        var resultCache = _cache.GetRecordAsync<MovementModel[]>(_caheKey + id);
+        var resultCache = _cache.GetRecordAsync<Movement[]>(_caheKey + id);
         if (resultCache.Result is null)
         {
             var query = "SELECT * FROM movements WHERE id=@Id";
@@ -33,7 +33,7 @@ public class MovementCacheRepository : IMovementRepository
             {
                 var resultDb = await connection.QueryFirstOrDefaultAsync<object>(query, parameters);
                 //var resultDb = await connection.QueryAsync<object>(query, parameters);
-                MovementModel dataModel = Map(resultDb);
+                Movement dataModel = Map(resultDb);
                 await _cache.SetRecordAsync(_caheKey + id, dataModel);
                 return dataModel;
             }
@@ -42,9 +42,9 @@ public class MovementCacheRepository : IMovementRepository
             return resultCache.Result.Where(x => x.Id.Equals(id)).FirstOrDefault();
     }
 
-    public async Task<IEnumerable<MovementModel>> ReadByAccount(int accountId)
+    public async Task<IEnumerable<Movement>> ReadByAccount(int accountId)
     {
-        var resultCache = _cache.GetRecordAsync<MovementModel[]>(_caheKey+accountId);
+        var resultCache = _cache.GetRecordAsync<Movement[]>(_caheKey+accountId);
         if (resultCache.Result is null)
         {
             var query = "SELECT * FROM movements WHERE account_id=@Id";
@@ -54,7 +54,7 @@ public class MovementCacheRepository : IMovementRepository
             {
                 var resultDb = await connection.QueryAsync<object>(query, parameters);
                 //var resultDb = await connection.QueryAsync<object>(query, parameters);
-                IEnumerable<MovementModel> dataModel = Map(resultDb);
+                IEnumerable<Movement> dataModel = Map(resultDb);
                 await _cache.SetRecordAsync(_caheKey+accountId, dataModel);
                 return dataModel;
             }
@@ -63,9 +63,9 @@ public class MovementCacheRepository : IMovementRepository
             return resultCache.Result.Where(x => x.Id.Equals(accountId));
     }
 
-    public async Task<IEnumerable<MovementModel>> ReadAll()
+    public async Task<IEnumerable<Movement>> ReadAll()
     {
-        var resultCache = _cache.GetRecordAsync<MovementModel[]>(_caheKey);
+        var resultCache = _cache.GetRecordAsync<Movement[]>(_caheKey);
         if (resultCache.Result is null)
         {
             var query = "SELECT * FROM Movements";
@@ -79,9 +79,9 @@ public class MovementCacheRepository : IMovementRepository
             return Map(resultCache.Result);
     }
 
-    private static IEnumerable<MovementModel> Map(IEnumerable<dynamic> dataDb)
+    private static IEnumerable<Movement> Map(IEnumerable<dynamic> dataDb)
     {
-        IEnumerable<MovementModel> MovementList = dataDb.Select(x => new MovementModel
+        IEnumerable<Movement> MovementList = dataDb.Select(x => new Movement
         {
             Id = (int)x.id,
             AccountId = (int)x.account_id,
@@ -91,9 +91,9 @@ public class MovementCacheRepository : IMovementRepository
         return MovementList;
     }
 
-    private static MovementModel Map(dynamic x)
+    private static Movement Map(dynamic x)
     {
-        return new MovementModel
+        return new Movement
         {
             Id = (int)x.id,
             AccountId = (int)x.account_id,
@@ -102,7 +102,7 @@ public class MovementCacheRepository : IMovementRepository
         };
     }
 
-    public async Task<bool> Create(MovementModel dataModel)
+    public async Task<bool> Create(Movement dataModel)
     {
         var query = "INSERT INTO movements (account_id, amount)"
             + " VALUES(@AccountId,  @Amount)";
@@ -122,7 +122,7 @@ public class MovementCacheRepository : IMovementRepository
         }
     }
 
-    public async Task<bool> Update(MovementModel dataModel)
+    public async Task<bool> Update(Movement dataModel)
     {
         var query = "UPDATE movements SET amount=@Amount" +
             ", WHERE id=@Id";
@@ -145,7 +145,6 @@ public class MovementCacheRepository : IMovementRepository
 
     public async Task<bool> Delete(int id)
     {
-
         var query = "DELETE FROM movements WHERE id=@Id";
         var parameters = new DynamicParameters();
         parameters.Add("id", id);
@@ -162,12 +161,17 @@ public class MovementCacheRepository : IMovementRepository
         }
     }
 
-    public Task<IEnumerable<MovementModel>> ReadById(int accountId, int id)
+    public Task<IEnumerable<Movement>> ReadById(int accountId, int id)
     {
         throw new NotImplementedException();
     }
 
-    Task<(bool, int?)> IMovementRepository.Create(MovementModel dataModel)
+    Task<(bool, int?)> IMovementRepository.Create(Movement dataModel)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<(bool, int?)> CreateLog(Transfer dataModel)
     {
         throw new NotImplementedException();
     }

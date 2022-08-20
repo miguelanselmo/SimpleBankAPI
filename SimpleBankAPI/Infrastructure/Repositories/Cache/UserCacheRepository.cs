@@ -20,10 +20,10 @@ public class UserCacheRepository : IUserRepository
         _cache = cache;
     }
 
-    public async Task<UserModel?> ReadById(int id)
+    public async Task<User?> ReadById(int id)
     {
-        var resultCache = await _cache.GetRecordAsync<UserModel[]>(_caheKey + id);
-        //var resultCache = await _cache.GetRecordAsync<UserModel[]>(_caheKey);
+        var resultCache = await _cache.GetRecordAsync<User[]>(_caheKey + id);
+        //var resultCache = await _cache.GetRecordAsync<User[]>(_caheKey);
         if (resultCache is null)
         {
             var query = "SELECT * FROM users WHERE id=@id";
@@ -33,7 +33,7 @@ public class UserCacheRepository : IUserRepository
             {
                 var resultDb = await connection.QueryFirstOrDefaultAsync<object>(query, parameters);
                 //var resultDb = await connection.QueryAsync<object>(query, parameters);
-                UserModel dataModel = Map(resultDb);
+                User dataModel = Map(resultDb);
                 //await _cache.SetRecordAsync(_caheKey+id, dataModel);
                 return dataModel;
             }
@@ -42,10 +42,10 @@ public class UserCacheRepository : IUserRepository
             return resultCache.Where(x => x.Id.Equals(id)).FirstOrDefault();
     }
     /*
-    public async Task<UserModel?> ReadByName(string name)
+    public async Task<User?> ReadByName(string name)
     {
-        var resultCache = await _cache.GetRecordAsync<UserModel[]>(_caheKey+id);
-        //var resultCache = await _cache.GetRecordAsync<UserModel[]>(_caheKey);
+        var resultCache = await _cache.GetRecordAsync<User[]>(_caheKey+id);
+        //var resultCache = await _cache.GetRecordAsync<User[]>(_caheKey);
         if (resultCache is null)
         {
             var query = "SELECT * FROM users WHERE username=@username";
@@ -55,7 +55,7 @@ public class UserCacheRepository : IUserRepository
             {
                 var resultDb = await connection.QueryFirstOrDefaultAsync<object>(query, parameters);
                ///var resultDb = await connection.QueryAsync<object>(query, parameters);
-                UserModel dataModel = Map(resultDb);
+                User dataModel = Map(resultDb);
                 //await _cache.SetRecordAsync(_caheKey+id, dataModel);
                 return dataModel;
             }
@@ -64,16 +64,16 @@ public class UserCacheRepository : IUserRepository
             return resultCache.Where(x => x.UserName.Equals(name)).FirstOrDefault();
     }
     */
-    public async Task<IEnumerable<UserModel>> ReadAll()
+    public async Task<IEnumerable<User>> ReadAll()
     {
-        var resultCache = await _cache.GetRecordAsync<UserModel[]>(_caheKey);
+        var resultCache = await _cache.GetRecordAsync<User[]>(_caheKey);
         if (resultCache is null)
         {
             var query = "SELECT * FROM users";
             using (var connection = _db.GetSqlConnection(_connectionId))
             {
                 var resultDb = await connection.QueryAsync(query);
-                IEnumerable<UserModel> dataModel = Map(resultDb);
+                IEnumerable<User> dataModel = Map(resultDb);
                 await _cache.SetRecordAsync(_caheKey, dataModel);
                 return dataModel;
             }
@@ -82,10 +82,10 @@ public class UserCacheRepository : IUserRepository
             return Map(resultCache);
     }
 
-    private static IEnumerable<UserModel> Map(IEnumerable<dynamic> dataDb)
+    private static IEnumerable<User> Map(IEnumerable<dynamic> dataDb)
     {
         if (dataDb is null) return null;
-        IEnumerable<UserModel> userList = dataDb.Select(x => new UserModel
+        IEnumerable<User> userList = dataDb.Select(x => new User
         {
             Id = (int)x.id,
             UserName = (string)x.username,
@@ -97,10 +97,10 @@ public class UserCacheRepository : IUserRepository
         return userList;
     }
 
-    private static UserModel Map(dynamic x)
+    private static User Map(dynamic x)
     {
         if (x is null) return null;
-        return new UserModel
+        return new User
         {
             Id = (int)x.id,
             UserName = (string)x.username,
@@ -111,7 +111,7 @@ public class UserCacheRepository : IUserRepository
         };
     }
 
-    public async Task<(bool, int?)> Create(UserModel dataModel)
+    public async Task<(bool, int?)> Create(User dataModel)
     {
         var query = "INSERT INTO users (username, password, full_name, email)"
             + " VALUES(@username,  @password,  @full_name, @email) RETURNING id";
@@ -134,7 +134,7 @@ public class UserCacheRepository : IUserRepository
         }
     }
 
-    public async Task<bool> Update(UserModel dataModel)
+    public async Task<bool> Update(User dataModel)
     {
         var query = "UPDATE users SET username=@username, password=@password, full_name=@full_name" +
             ", email=@Email WHERE id=@id";
@@ -179,7 +179,7 @@ public class UserCacheRepository : IUserRepository
         }
     }
 
-    public Task<UserModel?> ReadByName(string name)
+    public Task<User?> ReadByName(string name)
     {
         throw new NotImplementedException();
     }

@@ -4,9 +4,9 @@ namespace SimpleBankAPI.Core.Usecases;
 
 public interface IAccountUseCase
 {
-    Task<(bool, string?, AccountModel?)> CreateAccount(AccountModel user);
+    Task<(bool, string?, Account?)> CreateAccount(Account user);
     
-    Task<(bool, string?, IEnumerable<AccountModel>)> GetAccounts(int userId);
+    Task<(bool, string?, IEnumerable<Account>)> GetAccounts(int userId);
 
-    Task<(bool, string?, AccountModel, IEnumerable<MovementModel>)> GetAccountMovements(int userId, int id);
+    Task<(bool, string?, Account, IEnumerable<Movement>)> GetAccountMovements(int userId, int id);
 }

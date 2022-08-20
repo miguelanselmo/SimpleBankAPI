@@ -4,54 +4,51 @@ using SimpleBankAPI.Core.Entities;
 using SimpleBankAPI.Core.Enums;
 using SimpleBankAPI.Infrastructure.Repositories.SqlDataAccess;
 using System.Data;
+using System.Text.Json;
 
 namespace SimpleBankAPI.Infrastructure.Repositories;
 
 public class MovementRepository : IMovementRepository
 {
-    //private readonly ISqlDataAccess db;
-    private readonly IDbTransaction dbTransaction;
-    //private const string connectionId = "BankDB";
+    private readonly IDbTransaction _dbTransaction;
 
-    public MovementRepository(/*ISqlDataAccess db,*/ IDbTransaction dbTransaction)
+    public MovementRepository(IDbTransaction dbTransaction)
     {
-        //this.db = db;
-        this.dbTransaction = dbTransaction;
+        _dbTransaction = dbTransaction;
     }
 
-    public async Task<IEnumerable<MovementModel>> ReadById(int accountId, int id)
+    public async Task<IEnumerable<Movement>> ReadById(int accountId, int id)
     {
         var query = "SELECT * FROM movements WHERE account_id=@Id AND id=@id";
         var parameters = new DynamicParameters();
         parameters.Add("account_id", accountId);
         parameters.Add("Id", id);
-        
-            var resultDb = await dbTransaction.Connection.QueryAsync<object>(query, parameters, dbTransaction);
-            return Map(resultDb);
+        var resultDb = await _dbTransaction.Connection.QueryAsync<object>(query, parameters);
+        return Map(resultDb);
     }
 
-    public async Task<IEnumerable<MovementModel>> ReadByAccount(int accountId)
+    public async Task<IEnumerable<Movement>> ReadByAccount(int accountId)
     {
         var query = "SELECT * FROM movements WHERE account_id=@account_id";
         var parameters = new DynamicParameters();
         parameters.Add("account_id", accountId);
-            var resultDb = await dbTransaction.Connection.QueryAsync<object>(query, parameters, dbTransaction);
-            return Map(resultDb);
+        var resultDb = await _dbTransaction.Connection.QueryAsync<object>(query, parameters);
+        return Map(resultDb);
     }
 
-    public async Task<IEnumerable<MovementModel>> ReadAll()
+    public async Task<IEnumerable<Movement>> ReadAll()
     {
         var query = "SELECT * FROM movements";
-        using (var connection = dbTransaction.Connection)
+        using (var connection = _dbTransaction.Connection)
         {
             var resultDb = await connection.QueryAsync(query);
             return Map(resultDb);
         }
     }
 
-    private static IEnumerable<MovementModel> Map(IEnumerable<dynamic> dataDb)
+    private static IEnumerable<Movement> Map(IEnumerable<dynamic> dataDb)
     {
-        IEnumerable<MovementModel> MovementList = dataDb.Select(x => new MovementModel
+        IEnumerable<Movement> MovementList = dataDb.Select(x => new Movement
         {
             Id = (int)x.id,
             AccountId = (int)x.account_id,
@@ -62,9 +59,9 @@ public class MovementRepository : IMovementRepository
         return MovementList;
     }
 
-    private static MovementModel Map(dynamic x)
+    private static Movement Map(dynamic x)
     {
-        return new MovementModel
+        return new Movement
         {
             Id = (int)x.id,
             AccountId = (int)x.account_id,
@@ -74,39 +71,45 @@ public class MovementRepository : IMovementRepository
         };
     }
 
-    public async Task<(bool, int?)> Create(MovementModel dataModel)
+    public async Task<(bool, int?)> Create(Movement data)
     {
         var query = "INSERT INTO movements (account_id, amount, balance)"
             + " VALUES(@account_id,  @amount, @balance) RETURNING id";
         var parameters = new DynamicParameters();
-        parameters.Add("account_id", dataModel.AccountId);
-        parameters.Add("amount", dataModel.Amount);
-        parameters.Add("balance", dataModel.Balance);
-
-            var result = await dbTransaction.Connection.ExecuteScalarAsync<int>(query, parameters, dbTransaction);
-            return result > 0 ? (true, result) : (false, null);
+        parameters.Add("account_id", data.AccountId);
+        parameters.Add("amount", data.Amount);
+        parameters.Add("balance", data.Balance);
+        var result = await _dbTransaction.Connection.ExecuteScalarAsync<int>(query, parameters, _dbTransaction);
+        return result > 0 ? (true, result) : (false, null);
     }
 
-    public async Task<bool> Update(MovementModel dataModel)
+    public async Task<(bool, int?)> CreateLog(Transfer data)
+    {
+        var query = "INSERT INTO operations_log (data)"
+            + " VALUES(@data) RETURNING id";
+        var parameters = new DynamicParameters();
+        parameters.Add("data", null);
+        var result = await _dbTransaction.Connection.ExecuteScalarAsync<int>(query, parameters, _dbTransaction);
+        return result > 0 ? (true, result) : (false, null);
+    }
+
+    public async Task<bool> Update(Movement data)
     {
         var query = "UPDATE movements SET amount=@amount, balance=@balance WHERE id=@id";
         var parameters = new DynamicParameters();
-        parameters.Add("id", dataModel.Id);
-        parameters.Add("amount", dataModel.Amount);
-        parameters.Add("balance", dataModel.Balance);
-
-            var result = await dbTransaction.Connection.ExecuteAsync(query, parameters, dbTransaction);
-            return result > 0;
+        parameters.Add("id", data.Id);
+        parameters.Add("amount", data.Amount);
+        parameters.Add("balance", data.Balance);
+        var result = await _dbTransaction.Connection.ExecuteAsync(query, parameters, _dbTransaction);
+        return result > 0;
     }
 
     public async Task<bool> Delete(int id)
     {
-
         var query = "DELETE FROM movements WHERE id=@id";
         var parameters = new DynamicParameters();
         parameters.Add("id", id);
-
-            var result = await dbTransaction.Connection.ExecuteAsync(query, parameters, dbTransaction);
-            return result > 0;
+        var result = await _dbTransaction.Connection.ExecuteAsync(query, parameters, _dbTransaction);
+        return result > 0;
     }
 }

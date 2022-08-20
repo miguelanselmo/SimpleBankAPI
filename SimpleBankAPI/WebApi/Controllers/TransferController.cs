@@ -7,6 +7,7 @@ using SimpleBankAPI.Core.Entities;
 using SimpleBankAPI.Infrastructure.Providers;
 using SimpleBankAPI.Infrastructure.Repositories;
 using SimpleBankAPI.Core.Usecases;
+using SimpleBankAPI.WebApi.Models;
 
 namespace SimpleBankAPI.WebApi.Controllers;
 
@@ -29,7 +30,7 @@ public class TransferController : Controller
 
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [HttpPost(Name = "CreateTransfer")]
-    [ProducesResponseType(typeof(string), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(transferResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(string), StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
@@ -46,16 +47,15 @@ public class TransferController : Controller
             if (!resultClaims.Item1)
                 return BadRequest("Missing User info in Token.");
             
-            var dataModel = new TransferModel
+            var account = new Transfer
             {
-                Amount = request.amount,
-                FromAccountId = request.from_account_id,
-                ToAccountId = request.to_account_id,
+                Amount = request.Amount,
+                FromAccountId = request.FromAccountId,
+                ToAccountId = request.ToAccountId,
                 UserId = resultClaims.Item2.Id
             };
-            //TODO: retornar movementModel
-            var result = await useCase.Transfer(dataModel);
-            return result.Item1 ? Ok() : BadRequest(result.Item2);
+            var result = await useCase.Transfer(account);
+            return result.Item1 ? Ok(new transferResponse { Amount = request.Amount * (-1), Balance = result.Item3.Balance }) : BadRequest(result.Item2);
         }
         catch (Exception ex)
         {
@@ -64,10 +64,17 @@ public class TransferController : Controller
         }
    }
 }
-
+/*
 public struct transferRequest
 {
     public decimal amount { get; set; }
     public int from_account_id { get; set; }
     public int to_account_id { get; set; }    
 }
+
+public struct transferResponse
+{
+    public decimal amount { get; set; }
+    public decimal balance { get; set; }
+}
+*/

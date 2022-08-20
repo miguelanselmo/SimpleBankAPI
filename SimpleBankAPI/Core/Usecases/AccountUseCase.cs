@@ -5,41 +5,50 @@ namespace SimpleBankAPI.Core.Usecases;
 
 public class AccountUseCase : IAccountUseCase
 {
-    private readonly ILogger<AccountUseCase> logger;
-    private readonly IUnitOfWork unitOfWork;
+    private readonly ILogger<AccountUseCase> _logger;
+    private readonly IUnitOfWork _unitOfWork;
     public AccountUseCase(ILogger<AccountUseCase> logger, IUnitOfWork unitOfWork)
     {
-        this.logger = logger;
-        this.unitOfWork = unitOfWork;
+        _logger = logger;
+        _unitOfWork = unitOfWork;
     }
     
-    public async Task<(bool, string?, AccountModel?)> CreateAccount(AccountModel account)
+    public async Task<(bool, string?, Account?)> CreateAccount(Account account)
     {
-        var result = await unitOfWork.AccountRepository.Create(account);
-        if (result.Item1)
+        bool commit = false;
+        try
         {
-            account.Id = (int)result.Item2;
-            return (true, null, account);
+            var result = await _unitOfWork.AccountRepository.Create(account);
+            if (result.Item1)
+            {
+                commit = true;
+                account.Id = (int)result.Item2;
+                return (true, null, account);
+            }
+            else
+                return (result.Item1, "Account not created. Please try again.", null);
         }
-        else
-            return (result.Item1, "Account not created. Please try again.", null);
+        finally
+        {
+            if (commit) _unitOfWork.Commit(); else _unitOfWork.Rollback();
+        }
     }
 
-    public async Task<(bool, string?, IEnumerable<AccountModel>)> GetAccounts(int userId)
+    public async Task<(bool, string?, IEnumerable<Account>)> GetAccounts(int userId)
     {
-        var result = await unitOfWork.AccountRepository.ReadByUser(userId);
+        var result = await _unitOfWork.AccountRepository.ReadByUser(userId);
         if (result is not null)
             return (true, null, result);
         else
             return (false, "Accounts not found.", null);
     }
     
-    public async Task<(bool, string?, AccountModel, IEnumerable<MovementModel>)> GetAccountMovements(int userId, int id)
+    public async Task<(bool, string?, Account, IEnumerable<Movement>)> GetAccountMovements(int userId, int id)
     {
-        var result = await unitOfWork.AccountRepository.ReadById(userId, id);
+        var result = await _unitOfWork.AccountRepository.ReadById(userId, id);
         if (result is not null)
         {
-            return (true, null, result, await unitOfWork.MovementRepository.ReadByAccount(id));
+            return (true, null, result, await _unitOfWork.MovementRepository.ReadByAccount(id));
         }
         else
             return (false, "Account not found.", null, null);

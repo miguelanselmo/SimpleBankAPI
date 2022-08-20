@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Mvc;
 using SimpleBankAPI.Core.Entities;
 using SimpleBankAPI.Infrastructure.Repositories;
 using SimpleBankAPI.Core.Usecases;
+using System.Text.Json.Serialization;
+using SimpleBankAPI.WebApi.Models;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -31,22 +33,22 @@ public class UserController : ControllerBase
     {
         try
         {
-            var dataModel = new UserModel
+            var account = new User
             {
-                UserName = request.user_name,
-                Email = request.email,
-                Password = request.password,
-                FullName = request.full_name
+                UserName = request.UserName,
+                Email = request.Email,
+                Password = request.Password,
+                FullName = request.FullName
             };
-            var result = await useCase.CreateUser(dataModel);
+            var result = await useCase.CreateUser(account);
             if (result.Item1)
             {
                 return Ok(new registerResponse
                 {
-                    user_id = result.Item3.Id,
-                    user_name = result.Item3.UserName,
-                    email = result.Item3.Email,
-                    full_name = result.Item3.FullName
+                    UserId = result.Item3.Id,
+                    UserName = result.Item3.UserName,
+                    Email = result.Item3.Email,
+                    FullName = result.Item3.FullName
                 });
             }
             else
@@ -69,28 +71,28 @@ public class UserController : ControllerBase
     {
         try
         {
-            UserModel dataModel = new UserModel
+            User account = new User
             {
 
-                UserName = request.user_name,
-                Password = request.password
+                UserName = request.UserName,
+                Password = request.Password
             };
-            var result = await useCase.Login(dataModel);
+            var result = await useCase.Login(account);
             if (result.Item1)
             {
                 //Response.Headers.Add("Authorization", (result.Item2);
                 loginResponse response = new loginResponse
                 {
-                    access_token = result.Item4.TokenAccess,
-                    access_token_expires_at = result.Item4.TokenAccessExpireAt,
-                    session_id = result.Item4.SessionId.ToString(),
-                    user = new registerResponse
+                    AccessToken = result.Item4.TokenAccess,
+                    AccessTokenExpiresAt = result.Item4.TokenAccessExpireAt,
+                    SessionId = result.Item4.SessionId.ToString(),
+                    User = new registerResponse
                     {
-                        user_id = result.Item3.Id,
-                        user_name = result.Item3.UserName,
-                        email = result.Item3.Email,
-                        full_name = result.Item3.FullName,
-                        created_at = result.Item3.CreatedAt
+                        UserId = result.Item3.Id,
+                        UserName = result.Item3.UserName,
+                        Email = result.Item3.Email,
+                        FullName = result.Item3.FullName,
+                        CreatedAt = result.Item3.CreatedAt
                     }
                 };
                 return Ok(response);
@@ -106,29 +108,34 @@ public class UserController : ControllerBase
     }
 }
 
-
-public struct errorResponse
-{
-    public string message { get; set; }
-}
-
+/*
 public struct registerRequest
 {
-    public string user_name { get; set; }
-    public string email { get; set; }
-    public string password { get; set; }
-    public string full_name { get; set; }    
+    [JsonPropertyNameAttribute("user_name")]
+    public string UserName { get; set; }
+    [JsonPropertyNameAttribute("email")]
+    public string Email { get; set; }
+    [JsonPropertyNameAttribute("password")]
+    public string Password { get; set; }
+    [JsonPropertyNameAttribute("full_name")]
+    public string FullName { get; set; }    
 }
 
 public struct registerResponse
 {
-    public int user_id { get; set; }
-    public string user_name { get; set; }
-    public string email { get; set; }
-    public string full_name { get; set; }
-    public DateTime created_at { get; set; }
+    [JsonPropertyNameAttribute("user_id")]
+    public int UserId { get; set; }
+    [JsonPropertyNameAttribute("user_name")]
+    public string UserName { get; set; }
+    [JsonPropertyNameAttribute("email")]
+    public string Email { get; set; }
+    [JsonPropertyNameAttribute("full_name")]
+    public string FullName { get; set; }
+    [JsonPropertyNameAttribute("created_at")]
+    public DateTime CreatedAt { get; set; }
 }
-
+*/
+/*
 public struct loginRequest
 {
     public string user_name { get; set; }
@@ -142,3 +149,4 @@ public struct loginResponse
     public string session_id { get; set; }
     public registerResponse user { get; set; }
 }
+*/

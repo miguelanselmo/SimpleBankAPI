@@ -7,16 +7,16 @@ namespace SimpleBankAPI.Infrastructure.Repositories.SqlDataAccess;
 
 public class SqlDataAccess : ISqlDataAccess
 {
-    private readonly IConfiguration config;
+    private readonly IConfiguration _config;
 
     public SqlDataAccess(IConfiguration config)
     {
-        this.config = config;
+        _config = config;
     }
 
     public NpgsqlConnection GetSqlConnection(string connectionId = "Default")
     {
-        return new NpgsqlConnection(config.GetConnectionString(connectionId));
+        return new NpgsqlConnection(_config.GetConnectionString(connectionId));
     }
 
     public async Task<IEnumerable<T>> LoadData<T, U>(
@@ -24,7 +24,7 @@ public class SqlDataAccess : ISqlDataAccess
         U parameters,
         string connectionId = "Default")
     {
-        using System.Data.IDbConnection connection = new NpgsqlConnection(config.GetConnectionString(connectionId));
+        using System.Data.IDbConnection connection = new NpgsqlConnection(_config.GetConnectionString(connectionId));
 
         return await connection.QueryAsync<T>(storedProcedure, parameters,
             commandType: CommandType.StoredProcedure);
@@ -35,7 +35,7 @@ public class SqlDataAccess : ISqlDataAccess
         T parameters,
         string connectionId = "Default")
     {
-        using System.Data.IDbConnection connection = new NpgsqlConnection(config.GetConnectionString(connectionId));
+        using System.Data.IDbConnection connection = new NpgsqlConnection(_config.GetConnectionString(connectionId));
 
         return await connection.ExecuteAsync(storedProcedure, parameters,
             commandType: CommandType.StoredProcedure);

@@ -21,9 +21,9 @@ public class TransferCacheRepository : ITransferRepository
         _cache = cache;
     }
 
-    public async Task<TransferModel?> ReadById(int id)
+    public async Task<Transfer?> ReadById(int id)
     {
-        var resultCache = _cache.GetRecordAsync<TransferModel[]>(_caheKey + id);
+        var resultCache = _cache.GetRecordAsync<Transfer[]>(_caheKey + id);
         if (resultCache.Result is null)
         {
             var query = "SELECT * FROM transfers WHERE id=@Id";
@@ -33,7 +33,7 @@ public class TransferCacheRepository : ITransferRepository
             {
                 var resultDb = await connection.QueryFirstOrDefaultAsync<object>(query, parameters);
                 //var resultDb = await connection.QueryAsync<object>(query, parameters);
-                TransferModel dataModel = Map(resultDb);
+                Transfer dataModel = Map(resultDb);
                 await _cache.SetRecordAsync(_caheKey + id, dataModel);
                 return dataModel;
             }
@@ -42,9 +42,9 @@ public class TransferCacheRepository : ITransferRepository
             return resultCache.Result.Where(x => x.Id.Equals(id)).FirstOrDefault();
     }
 
-    public async Task<IEnumerable<TransferModel>> ReadAll()
+    public async Task<IEnumerable<Transfer>> ReadAll()
     {
-        var resultCache = _cache.GetRecordAsync<TransferModel[]>(_caheKey);
+        var resultCache = _cache.GetRecordAsync<Transfer[]>(_caheKey);
         if (resultCache.Result is null)
         {
             var query = "SELECT * FROM transfers";
@@ -58,9 +58,9 @@ public class TransferCacheRepository : ITransferRepository
             return Map(resultCache.Result);
     }
 
-    private static IEnumerable<TransferModel> Map(IEnumerable<dynamic> dataDb)
+    private static IEnumerable<Transfer> Map(IEnumerable<dynamic> dataDb)
     {
-        IEnumerable<TransferModel> TransferList = dataDb.Select(x => new TransferModel
+        IEnumerable<Transfer> TransferList = dataDb.Select(x => new Transfer
         {
             Id = (int)x.id,
             FromAccountId = (int)x.from_account_id,
@@ -71,9 +71,9 @@ public class TransferCacheRepository : ITransferRepository
         return TransferList;
     }
 
-    private static TransferModel Map(dynamic x)
+    private static Transfer Map(dynamic x)
     {
-        return new TransferModel
+        return new Transfer
         {
             Id = (int)x.id,
             FromAccountId = (int)x.from_account_id,
@@ -83,7 +83,7 @@ public class TransferCacheRepository : ITransferRepository
         };
     }
 
-    public async Task<bool> Create(TransferModel dataModel)
+    public async Task<bool> Create(Transfer dataModel)
     {
         var query = "INSERT INTO Transfers (from_account_id, to_account_id, amount)"
             + " VALUES(@FromAccountId,  @ToAccountId,  @Amount)";
@@ -104,7 +104,7 @@ public class TransferCacheRepository : ITransferRepository
         }
     }
 
-    public async Task<bool> Update(TransferModel dataModel)
+    public async Task<bool> Update(Transfer dataModel)
     {
         var query = "UPDATE transfers SET amount=@Amount" +
             ", WHERE id=@Id";
@@ -144,7 +144,7 @@ public class TransferCacheRepository : ITransferRepository
         }
     }
 
-    public Task<IEnumerable<TransferModel>> ReadByAccount(int accountId)
+    public Task<IEnumerable<Transfer>> ReadByAccount(int accountId)
     {
         throw new NotImplementedException();
     }

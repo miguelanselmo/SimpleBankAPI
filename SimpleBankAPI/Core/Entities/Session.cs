@@ -1,7 +1,7 @@
 ﻿using System;
 
 namespace SimpleBankAPI.Core.Entities;
-public class SessionModel
+public class Session
 {
     public string TokenAccess { get; set; }
     public DateTime TokenAccessExpireAt { get; set; }

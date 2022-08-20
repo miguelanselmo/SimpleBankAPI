@@ -7,6 +7,7 @@ using SimpleBankAPI.Core.Enums;
 using SimpleBankAPI.Infrastructure.Providers;
 using SimpleBankAPI.Infrastructure.Repositories;
 using SimpleBankAPI.Core.Usecases;
+using SimpleBankAPI.WebApi.Models;
 
 namespace SimpleBankAPI.Controllers;
 
@@ -44,21 +45,21 @@ public class AccountController : Controller
             var resultClaims = provider.GetClaimUser(resultAuth.Item2);
             if (!resultClaims.Item1)
                 return BadRequest("Missing User info in Token.");
-            
-            var dataModel = new AccountModel
+
+            var account = new Account
             {
-                Balance = request.amount,
-                Currency = (CurrencyEnum)Enum.Parse(typeof(CurrencyEnum), request.currency),//TODO: set string not index
+                Balance = request.Amount,
+                Currency = (Currency)Enum.Parse(typeof(Currency), request.Currency),
                 UserId = resultClaims.Item2.Id
             };
-            var result = await useCase.CreateAccount(dataModel);
+            var result = await useCase.CreateAccount(account);
             if (result.Item1)
             {
                 return Ok(new createAccountResponse
                 {
-                    account_id = result.Item3.Id,
-                    balance = result.Item3.Balance,
-                    currency = result.Item3.Currency.ToString(),
+                    AccountId = result.Item3.Id,
+                    Balance = result.Item3.Balance,
+                    Currency = result.Item3.Currency.ToString(),
                 });
             }
             else
@@ -92,10 +93,10 @@ public class AccountController : Controller
             var result = await useCase.GetAccounts(resultClaims.Item2.Id);
             return Ok(result.Item3.Select(x => new account
             {
-                account_id = x.Id,
-                balance = x.Balance,
-                currency = x.Currency.ToString(),
-                created_at = x.CreatedAt
+                AccountId = x.Id,
+                Balance = x.Balance,
+                Currency = x.Currency.ToString(),
+                CreatedAt = x.CreatedAt
             }));
         }
         catch (Exception ex)
@@ -130,14 +131,14 @@ public class AccountController : Controller
             else
                 return Ok(new account
                 {
-                    account_id = result.Item3.Id,
-                    balance = result.Item3.Balance,
-                    currency = result.Item3.Currency.ToString(),
-                    created_at = result.Item3.CreatedAt,
-                    movs = result.Item4.Select(x => new movements
+                    AccountId = result.Item3.Id,
+                    Balance = result.Item3.Balance,
+                    Currency = result.Item3.Currency.ToString(),
+                    CreatedAt = result.Item3.CreatedAt,
+                    Movs = result.Item4.Select(x => new movements
                     {
-                        amount = x.Amount,
-                        created_at = x.CreatedAt
+                        Amount = x.Amount,
+                        CreatedAt = x.CreatedAt
                     })
                 });
         }
@@ -149,6 +150,7 @@ public class AccountController : Controller
     }
 }
 
+/*
 public struct createAccountRequest {
     public decimal amount { get; set; }
     public string currency { get; set; }
@@ -168,7 +170,7 @@ public struct account
     public decimal balance { get; set; }
     public string currency { get; set; }
     public DateTime created_at { get; set; }
-    public IEnumerable<movements> movs { get; set; }
+    public IEnumerable<movements>? movs { get; set; }
 }
 
 public struct movements
@@ -176,3 +178,4 @@ public struct movements
     public decimal amount { get; set; }
     public DateTime created_at { get; set; }
 }
+*/

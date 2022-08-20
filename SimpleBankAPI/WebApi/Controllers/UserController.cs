@@ -1,10 +1,12 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SimpleBankAPI.Core.Entities;
-using SimpleBankAPI.Infrastructure.Repositories;
 using SimpleBankAPI.Core.Usecases;
-using System.Text.Json.Serialization;
 using SimpleBankAPI.WebApi.Models;
+using Microsoft.Extensions.Primitives;
+using System.Net;
+using SimpleBankAPI.Infrastructure.Providers;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -14,13 +16,15 @@ namespace SimpleBankAPI.WebApi.Controllers;
 [ApiController]
 public class UserController : ControllerBase
 {
-    private readonly ILogger<UserController> logger;
-    private readonly IUserUseCase useCase;
+    private readonly ILogger<UserController> _logger;
+    private readonly IUserUseCase _useCase;
+    private readonly IAuthenticationProvider _provider;
 
-    public UserController(ILogger<UserController> logger, IUserUseCase useCase)
+    public UserController(ILogger<UserController> logger, IUserUseCase useCase, IAuthenticationProvider provider)
     {
-        this.logger = logger;
-        this.useCase = useCase;
+        _logger = logger;
+        _useCase = useCase;
+        _provider = provider;
     }
 
 
@@ -40,7 +44,7 @@ public class UserController : ControllerBase
                 Password = request.Password,
                 FullName = request.FullName
             };
-            var result = await useCase.CreateUser(account);
+            var result = await _useCase.CreateUser(account);
             if (result.Item1)
             {
                 return Ok(new registerResponse
@@ -56,7 +60,7 @@ public class UserController : ControllerBase
         }
         catch (Exception ex)
         {
-            logger.LogError(ex.Message, ex.InnerException);
+            _logger.LogError(ex.Message, ex.InnerException);
             return Problem(ex.Message);
         }
     }
@@ -77,7 +81,7 @@ public class UserController : ControllerBase
                 UserName = request.UserName,
                 Password = request.Password
             };
-            var result = await useCase.Login(account);
+            var result = await _useCase.Login(account);
             if (result.Item1)
             {
                 //Response.Headers.Add("Authorization", (result.Item2);
@@ -85,7 +89,7 @@ public class UserController : ControllerBase
                 {
                     AccessToken = result.Item4.TokenAccess,
                     AccessTokenExpiresAt = result.Item4.TokenAccessExpireAt,
-                    SessionId = result.Item4.SessionId.ToString(),
+                    SessionId = result.Item4.Id.ToString(),
                     User = new registerResponse
                     {
                         UserId = result.Item3.Id,
@@ -102,7 +106,38 @@ public class UserController : ControllerBase
         }
         catch (Exception ex)
         {
-            logger.LogError(ex.Message, ex.InnerException);
+            _logger.LogError(ex.Message, ex.InnerException);
+            return Problem(ex.Message);
+        }
+    }
+
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [HttpPost("logout", Name = "Logout")]
+    [ProducesResponseType(typeof(Session), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(string), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<loginResponse>> Logout()
+    {
+        try
+        {
+            if (!Request.Headers.TryGetValue("Authorization", out StringValues authToken))
+                return BadRequest("Missing Authorization Header.");
+            var resultAuth = _provider.GetToken(authToken);
+            if (!resultAuth.Item1)
+                return BadRequest("Missing Session info in Token.");
+            var resultClaims = _provider.GetClaimSession(resultAuth.Item2);
+            if (!resultClaims.Item1)
+                return BadRequest("Missing Session info in Token.");
+            var result = await _useCase.Logout(resultClaims.Item2);
+            if (result.Item1)
+                return Ok(result.Item3);
+            else
+                return BadRequest(result.Item2);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex.Message, ex.InnerException);
             return Problem(ex.Message);
         }
     }

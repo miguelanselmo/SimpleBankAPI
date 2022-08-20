@@ -54,17 +54,58 @@ public class UserUseCase : IUserUseCase
     
     public async Task<(bool,string?,User?,Session?)> Login(User user)
     {
-        var userDb = await _unitOfWork.UserRepository.ReadByName(user.UserName);
-        if (userDb is not null)
+        bool commit = false;
+        try
         {
-            if (Crypto.VerifySecret(userDb.Password, user.Password))
+            var userDb = await _unitOfWork.UserRepository.ReadByName(user.UserName);
+            if (userDb is not null)
             {
-                return (true, null, userDb, _provider.GenerateToken(userDb));
+                if (Crypto.VerifySecret(userDb.Password, user.Password))
+                {
+                    Session session = _provider.GenerateToken(userDb);
+                    session.Active = true;
+                    session.UserId = userDb.Id;
+                    var result = await _unitOfWork.SessionRepository.Create(session);
+                    commit = result;
+                    return result ? (true, null, userDb, session) : (false, "Error creating session", null, null);
+                }
+                else
+                    return (false, "Invalid authentication", null, null);
             }
             else
-                return (false, "Invalid authentication", null, null);
+                return (false, "User not found", null, null);
         }
-        else
-            return (false, "User not found", null, null);
+        finally
+        {
+            if (commit) _unitOfWork.Commit(); else _unitOfWork.Rollback();
+        }
     }
+
+    public async Task<(bool, string?, Session?)> Logout(Session session)
+    {
+        bool commit = false;
+        try
+        {
+            var sessionDb = await _unitOfWork.SessionRepository.ReadById(session.Id);
+            if (sessionDb is not null)
+            {
+                if (sessionDb.Active)
+                {
+                    sessionDb.Active = false;
+                    var result = await _unitOfWork.SessionRepository.Update(sessionDb);
+                    commit = result;
+                    return (true, null, sessionDb); ;
+                }
+                else
+                    return (false, "Session already closed", null);
+            }
+            else
+                return (false, "Session not found", null);
+        }
+        finally
+        {
+            if (commit) _unitOfWork.Commit(); else _unitOfWork.Rollback();
+        }
+    }
+
 }

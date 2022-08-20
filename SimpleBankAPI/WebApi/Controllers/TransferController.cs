@@ -15,16 +15,16 @@ namespace SimpleBankAPI.WebApi.Controllers;
 [ApiController]
 public class TransferController : Controller
 {
-    private readonly ILogger<TransferController> logger;
+    private readonly ILogger<TransferController> _logger;
     //private readonly ITransferRepository repository;
-    private readonly ITransferUseCase useCase;
-    private readonly IAuthenticationProvider provider;
+    private readonly ITransferUseCase _useCase;
+    private readonly IAuthenticationProvider _provider;
     
         public TransferController(ILogger<TransferController> logger, ITransferUseCase useCase, IAuthenticationProvider provider)
     {
-        this.logger = logger;
-        this.useCase = useCase;
-        this.provider = provider;
+        _logger = logger;
+        _useCase = useCase;
+        _provider = provider;
     }
 
 
@@ -40,10 +40,10 @@ public class TransferController : Controller
         {
             if (!Request.Headers.TryGetValue("Authorization", out StringValues authToken))
                 return BadRequest("Missing Authorization Header.");
-            var resultAuth = provider.GetToken(authToken);
+            var resultAuth = _provider.GetToken(authToken);
             if (!resultAuth.Item1)
                 return BadRequest("Missing User info in Token.");
-            var resultClaims = provider.GetClaimUser(resultAuth.Item2);
+            var resultClaims = _provider.GetClaimUser(resultAuth.Item2);
             if (!resultClaims.Item1)
                 return BadRequest("Missing User info in Token.");
             
@@ -54,12 +54,12 @@ public class TransferController : Controller
                 ToAccountId = request.ToAccountId,
                 UserId = resultClaims.Item2.Id
             };
-            var result = await useCase.Transfer(account);
+            var result = await _useCase.Transfer(account);
             return result.Item1 ? Ok(new transferResponse { Amount = request.Amount * (-1), Balance = result.Item3.Balance }) : BadRequest(result.Item2);
         }
         catch (Exception ex)
         {
-            logger.LogError(ex.Message, ex.InnerException);
+            _logger.LogError(ex.Message, ex.InnerException);
             return Problem(ex.Message);
         }
    }

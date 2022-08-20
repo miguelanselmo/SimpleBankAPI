@@ -35,7 +35,7 @@ public class AccountRepository : IAccountRepository
         return Map(resultDb);
     }
 
-    public async Task<IEnumerable<Account?>> ReadByUser(int userId)
+    public async Task<IEnumerable<Account>?> ReadByUser(int userId)
     {
         var query = "SELECT * FROM accounts WHERE user_id=@user_id";
         var parameters = new DynamicParameters();
@@ -44,14 +44,14 @@ public class AccountRepository : IAccountRepository
         return Map(resultDb);
     }
 
-    public async Task<IEnumerable<Account>> ReadAll()
+    public async Task<IEnumerable<Account>?> ReadAll()
     {
         var query = "SELECT * FROM accounts";
         var resultDb = await _dbTransaction.Connection.QueryAsync(query);
         return Map(resultDb);
     }
 
-    private static IEnumerable<Account> Map(IEnumerable<dynamic> dataDb)
+    private static IEnumerable<Account>? Map(IEnumerable<dynamic> dataDb)
     {
         if (dataDb is null) return null;
         return dataDb.Select(x => new Account
@@ -64,7 +64,7 @@ public class AccountRepository : IAccountRepository
         });
     }
 
-    private static Account Map(dynamic x)
+    private static Account? Map(dynamic x)
     {
         if (x is null) return null;
         return new Account

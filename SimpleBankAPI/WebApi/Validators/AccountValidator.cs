@@ -15,19 +15,4 @@ public class CreateAccountValidator : AbstractValidator<createAccountRequest>
        //_ = validator.RuleFor(x => x.Currency).IsInEnum().WithMessage("Currency not valid.");
     }
 }
-/*
-public class CurrencyEnumValidator<T> : PropertyValidator
-{
 
-    public CurrencyEnumValidator() : base("Invalid Enum value!") { }
-
-    protected override bool IsValid(PropertyValidatorContext context)
-    {
-        CurrencyEnum enumVal = (CurrencyEnum)Enum.Parse(typeof(CurrencyEnum), context.PropertyValue);
-
-        if (!Enum.IsDefined(typeof(CurrencyEnum), enumVal))
-          return false;
-        return true;
-    }
-}
-*/

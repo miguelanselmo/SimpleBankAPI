@@ -32,14 +32,14 @@ public class UserRepository : IUserRepository
         var resultDb = await _dbTransaction.Connection.QueryFirstOrDefaultAsync<object>(query, parameters);
         return Map(resultDb);
     }
-    public async Task<IEnumerable<User>> ReadAll()
+    public async Task<IEnumerable<User>?> ReadAll()
     {
         var query = "SELECT * FROM users";
         var resultDb = await _dbTransaction.Connection.QueryAsync(query);
         return Map(resultDb);
     }
 
-    private static IEnumerable<User> Map(IEnumerable<dynamic> dataDb)
+    private static IEnumerable<User>? Map(IEnumerable<dynamic> dataDb)
     {
         if (dataDb is null) return null;
         IEnumerable<User> userList = dataDb.Select(x => new User
@@ -54,7 +54,7 @@ public class UserRepository : IUserRepository
         return userList;
     }
 
-    private static User Map(dynamic x)
+    private static User? Map(dynamic x)
     {
         if (x is null) return null;
         return new User
@@ -84,7 +84,7 @@ public class UserRepository : IUserRepository
     public async Task<bool> Update(User data)
     {
         var query = "UPDATE users SET username=@username, password=@password, full_name=@full_name" +
-            ", email=@Email WHERE id=@id";
+            " email=@Email WHERE id=@id";
         var parameters = new DynamicParameters();
         parameters.Add("id", data.Id);
         parameters.Add("username", data.UserName);
@@ -97,7 +97,6 @@ public class UserRepository : IUserRepository
 
     public async Task<bool> Delete(int id)
     {
-
         var query = "DELETE FROM users WHERE id=@id";
         var parameters = new DynamicParameters();
         parameters.Add("id", id);

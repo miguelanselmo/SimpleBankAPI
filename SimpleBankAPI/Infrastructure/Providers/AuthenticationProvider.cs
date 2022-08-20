@@ -46,6 +46,23 @@ public class AuthenticationProvider : IAuthenticationProvider
         }
     }
 
+    public (bool, Session?) GetClaimSession(string token)
+    {
+        try
+        {
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var securityToken = (JwtSecurityToken)tokenHandler.ReadToken(token);
+            return (true, new Session
+            {
+                Id = Guid.Parse(securityToken.Claims.FirstOrDefault(c => c.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/sid")?.Value)
+            });
+        }
+        catch (Exception ex)
+        {
+            return (false, null);
+        }
+    }
+
     public bool ValidateToken()
     {
         return true;
@@ -65,8 +82,8 @@ public class AuthenticationProvider : IAuthenticationProvider
         var claims = new[]
         {
             new Claim(ClaimTypes.Name, user.UserName),
-            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString())
-            //new Claim(ClaimTypes.Id, Guid.NewGuid().ToString())
+            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+            new Claim(ClaimTypes.Sid, sessionId.ToString())
         };
         var token = new JwtSecurityToken
         (
@@ -83,7 +100,7 @@ public class AuthenticationProvider : IAuthenticationProvider
         {
             TokenAccess = new JwtSecurityTokenHandler().WriteToken(token),
             TokenAccessExpireAt = expiredAt,
-            SessionId = sessionId
+            Id = sessionId
         };
     }
 }

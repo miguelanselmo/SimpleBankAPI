@@ -23,8 +23,8 @@ public class MovementCacheRepository : IMovementRepository
 
     public async Task<Movement?> Read(int id)
     {
-        var resultCache = _cache.GetRecordAsync<Movement[]>(_caheKey + id);
-        if (resultCache.Result is null)
+        var resultCache = await _cache.GetRecordAsync<Movement[]>(_caheKey + id);
+        if (resultCache is null)
         {
             var query = "SELECT * FROM movements WHERE id=@Id";
             var parameters = new DynamicParameters();
@@ -39,13 +39,13 @@ public class MovementCacheRepository : IMovementRepository
             }
         }
         else
-            return resultCache.Result.Where(x => x.Id.Equals(id)).FirstOrDefault();
+            return resultCache.Where(x => x.Id.Equals(id)).FirstOrDefault();
     }
 
     public async Task<IEnumerable<Movement>> ReadByAccount(int accountId)
     {
-        var resultCache = _cache.GetRecordAsync<Movement[]>(_caheKey+accountId);
-        if (resultCache.Result is null)
+        var resultCache = await _cache.GetRecordAsync<Movement[]>(_caheKey+accountId);
+        if (resultCache is null)
         {
             var query = "SELECT * FROM movements WHERE account_id=@Id";
             var parameters = new DynamicParameters();
@@ -60,13 +60,13 @@ public class MovementCacheRepository : IMovementRepository
             }
         }
         else
-            return resultCache.Result.Where(x => x.Id.Equals(accountId));
+            return resultCache.Where(x => x.Id.Equals(accountId));
     }
 
     public async Task<IEnumerable<Movement>> ReadAll()
     {
-        var resultCache = _cache.GetRecordAsync<Movement[]>(_caheKey);
-        if (resultCache.Result is null)
+        var resultCache = await _cache.GetRecordAsync<Movement[]>(_caheKey);
+        if (resultCache is null)
         {
             var query = "SELECT * FROM Movements";
             using (var connection = _db.GetSqlConnection(_connectionId))
@@ -76,7 +76,7 @@ public class MovementCacheRepository : IMovementRepository
             }
         }
         else
-            return Map(resultCache.Result);
+            return Map(resultCache);
     }
 
     private static IEnumerable<Movement> Map(IEnumerable<dynamic> dataDb)

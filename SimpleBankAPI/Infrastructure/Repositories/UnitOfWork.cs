@@ -10,6 +10,7 @@ public class UnitOfWork : IUnitOfWork, IDisposable
     public IAccountRepository AccountRepository { get; }
     public IMovementRepository MovementRepository { get; }
     //public ITransferRepository transferRepository { get; }
+    public ISessionRepository SessionRepository { get; }
 
     //private readonly ISqlDataAccess _db;
     private readonly IDistributedCache _cache;
@@ -20,11 +21,12 @@ public class UnitOfWork : IUnitOfWork, IDisposable
     //Guid _id = Guid.Empty;
 
     //
-    public UnitOfWork(IDbTransaction dbTransaction/*, ISqlDataAccess db*//*, IDbConnection dbConnection*/, IDistributedCache cache, IUserRepository userRepository, IAccountRepository accountRepository, IMovementRepository movementRepository)
+    public UnitOfWork(IDbTransaction dbTransaction/*, ISqlDataAccess db*//*, IDbConnection dbConnection*/, IDistributedCache cache, IUserRepository userRepository, IAccountRepository accountRepository, IMovementRepository movementRepository, ISessionRepository sessionRepository)
     {
         UserRepository = userRepository;
         AccountRepository = accountRepository;
         MovementRepository = movementRepository;
+        this.SessionRepository = sessionRepository;
         //this.transferRepository = transferRepository;
 
         _dbTransaction = dbTransaction;

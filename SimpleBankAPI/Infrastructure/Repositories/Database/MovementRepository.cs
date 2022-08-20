@@ -17,7 +17,7 @@ public class MovementRepository : IMovementRepository
         _dbTransaction = dbTransaction;
     }
 
-    public async Task<IEnumerable<Movement>> ReadById(int accountId, int id)
+    public async Task<IEnumerable<Movement>?> ReadById(int accountId, int id)
     {
         var query = "SELECT * FROM movements WHERE account_id=@Id AND id=@id";
         var parameters = new DynamicParameters();
@@ -27,7 +27,7 @@ public class MovementRepository : IMovementRepository
         return Map(resultDb);
     }
 
-    public async Task<IEnumerable<Movement>> ReadByAccount(int accountId)
+    public async Task<IEnumerable<Movement>?> ReadByAccount(int accountId)
     {
         var query = "SELECT * FROM movements WHERE account_id=@account_id";
         var parameters = new DynamicParameters();
@@ -36,7 +36,7 @@ public class MovementRepository : IMovementRepository
         return Map(resultDb);
     }
 
-    public async Task<IEnumerable<Movement>> ReadAll()
+    public async Task<IEnumerable<Movement>?> ReadAll()
     {
         var query = "SELECT * FROM movements";
         using (var connection = _dbTransaction.Connection)
@@ -46,7 +46,7 @@ public class MovementRepository : IMovementRepository
         }
     }
 
-    private static IEnumerable<Movement> Map(IEnumerable<dynamic> dataDb)
+    private static IEnumerable<Movement>? Map(IEnumerable<dynamic> dataDb)
     {
         IEnumerable<Movement> MovementList = dataDb.Select(x => new Movement
         {
@@ -59,7 +59,7 @@ public class MovementRepository : IMovementRepository
         return MovementList;
     }
 
-    private static Movement Map(dynamic x)
+    private static Movement? Map(dynamic x)
     {
         return new Movement
         {

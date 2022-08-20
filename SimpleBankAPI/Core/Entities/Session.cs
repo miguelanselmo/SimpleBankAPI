@@ -7,6 +7,8 @@ public class Session
     public DateTime TokenAccessExpireAt { get; set; }
     public string TokenRefresh { get; set; }
     public DateTime TokenRefreshExpireAt { get; set; }
-    public Guid SessionId { get; set; }
+    public Guid Id { get; set; }
     public int UserId { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public bool Active { get; set; }   
 }

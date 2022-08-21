@@ -16,14 +16,15 @@ namespace SimpleBankAPI.WebApi.Controllers;
 public class TransferController : Controller
 {
     private readonly ILogger<TransferController> _logger;
-    //private readonly ITransferRepository repository;
     private readonly ITransferUseCase _useCase;
+    private readonly IUserUseCase _userUseCase;
     private readonly IAuthenticationProvider _provider;
     
-        public TransferController(ILogger<TransferController> logger, ITransferUseCase useCase, IAuthenticationProvider provider)
+        public TransferController(ILogger<TransferController> logger, ITransferUseCase useCase, IUserUseCase userUseCase, IAuthenticationProvider provider)
     {
         _logger = logger;
         _useCase = useCase;
+        _userUseCase = userUseCase;
         _provider = provider;
     }
 
@@ -40,19 +41,19 @@ public class TransferController : Controller
         {
             if (!Request.Headers.TryGetValue("Authorization", out StringValues authToken))
                 return BadRequest("Missing Authorization Header.");
-            var resultAuth = _provider.GetToken(authToken);
-            if (!resultAuth.Item1)
-                return BadRequest("Missing User info in Token.");
-            var resultClaims = _provider.GetClaimUser(resultAuth.Item2);
+            var resultClaims = _provider.GetClaimSession(authToken);
             if (!resultClaims.Item1)
-                return BadRequest("Missing User info in Token.");
-            
+                return BadRequest(resultClaims.Item2);
+            var resultSession = await _userUseCase.CheckSession(resultClaims.Item3);
+            if (!resultSession.Item1)
+                return Unauthorized(resultSession.Item2);
+
             var account = new Transfer
             {
                 Amount = request.Amount,
                 FromAccountId = request.FromAccountId,
                 ToAccountId = request.ToAccountId,
-                UserId = resultClaims.Item2.Id
+                UserId = resultClaims.Item3.UserId
             };
             var result = await _useCase.Transfer(account);
             return result.Item1 ? Ok(new transferResponse { Amount = request.Amount * (-1), Balance = result.Item3.Balance }) : BadRequest(result.Item2);

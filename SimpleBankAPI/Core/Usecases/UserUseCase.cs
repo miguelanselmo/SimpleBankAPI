@@ -22,7 +22,7 @@ public class UserUseCase : IUserUseCase
         _provider = provider;
         _unitOfWork = unitOfWork;
     }
-
+    
     public async Task<(bool,string?, User?)> CreateUser(User user)
     {
         bool commit = false;
@@ -101,11 +101,21 @@ public class UserUseCase : IUserUseCase
             }
             else
                 return (false, "Session not found", null);
-        }
+        }        
         finally
         {
             if (commit) _unitOfWork.Commit(); else _unitOfWork.Rollback();
         }
+    }
+
+    public async Task<(bool, string?, Session?)> CheckSession(Session session)
+    {
+        var sessionDb = await _unitOfWork.SessionRepository.ReadById(session.Id);
+        if (sessionDb is null)
+            return (false, "Session not found", null);
+        if (!sessionDb.Active)
+            return (false, "Session is closed", sessionDb);
+        return (true, null, sessionDb);
     }
 
 }

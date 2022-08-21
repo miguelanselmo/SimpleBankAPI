@@ -10,16 +10,15 @@ using SimpleBankAPI.Core.Usecases;
 using System.Data;
 using System.Text;
 using SimpleBankAPI.WebApi.Models;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
-
 // Add services to the container.
-builder.Services.AddFluentValidation(x => x.RegisterValidatorsFromAssemblyContaining<registerRequest>());
-builder.Services.AddFluentValidation(x => x.RegisterValidatorsFromAssemblyContaining<loginRequest>());
-builder.Services.AddFluentValidation(x => x.RegisterValidatorsFromAssemblyContaining<createAccountRequest>());
-builder.Services.AddFluentValidation(x => x.RegisterValidatorsFromAssemblyContaining<transferRequest>());
-builder.Services.AddSingleton<IAuthenticationProvider, AuthenticationProvider>();
+builder.Host.UseSerilog((ctx, lc) => lc
+        .WriteTo.Console()
+        .ReadFrom.Configuration(ctx.Configuration));
 
+builder.Services.AddSingleton<IAuthenticationProvider, AuthenticationProvider>();
 //builder.Services.AddSingleton<IConfiguration>(Configuration);
 //builder.Services.AddSingleton<NpgsqlConnection>();
 //builder.Services.AddSingleton<IDbConnection, DbConnection>();
@@ -37,9 +36,15 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IAccountRepository, AccountRepository>();
 builder.Services.AddScoped<ISessionRepository, SessionRepository>();
 builder.Services.AddScoped<IMovementRepository, MovementRepository>();
+
 builder.Services.AddScoped<IUserUseCase, UserUseCase>();
 builder.Services.AddScoped<IAccountUseCase, AccountUseCase>();
 builder.Services.AddScoped<ITransferUseCase, TransferUseCase>();
+
+builder.Services.AddFluentValidation(x => x.RegisterValidatorsFromAssemblyContaining<registerRequest>());
+builder.Services.AddFluentValidation(x => x.RegisterValidatorsFromAssemblyContaining<loginRequest>());
+builder.Services.AddFluentValidation(x => x.RegisterValidatorsFromAssemblyContaining<createAccountRequest>());
+builder.Services.AddFluentValidation(x => x.RegisterValidatorsFromAssemblyContaining<transferRequest>());
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
 {

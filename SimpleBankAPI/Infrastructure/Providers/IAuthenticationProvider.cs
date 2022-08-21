@@ -7,7 +7,7 @@ public interface IAuthenticationProvider
 {
     bool ValidateToken();
     Session GenerateToken(User user);
-    (bool, User?) GetClaimUser(string token);
-    (bool, Session?) GetClaimSession(string token);
+    //(bool, User?) GetClaimUser(string token);
+    (bool, string?, Session?) GetClaimSession(string authToken);
     (bool, string) GetToken(StringValues authToken);
 }

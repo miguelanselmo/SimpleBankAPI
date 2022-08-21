@@ -7,10 +7,12 @@ public class AccountUseCase : IAccountUseCase
 {
     private readonly ILogger<AccountUseCase> _logger;
     private readonly IUnitOfWork _unitOfWork;
-    public AccountUseCase(ILogger<AccountUseCase> logger, IUnitOfWork unitOfWork)
+    //private readonly IUserUseCase _userUseCase;
+    public AccountUseCase(ILogger<AccountUseCase> logger, IUnitOfWork unitOfWork/*, IUserUseCase userUseCase*/)
     {
         _logger = logger;
         _unitOfWork = unitOfWork;
+        //_userUseCase = userUseCase;
     }
     
     public async Task<(bool, string?, Account?)> CreateAccount(Account account)

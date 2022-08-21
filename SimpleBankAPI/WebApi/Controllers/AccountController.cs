@@ -7,6 +7,7 @@ using SimpleBankAPI.Core.Enums;
 using SimpleBankAPI.Infrastructure.Providers;
 using SimpleBankAPI.Core.Usecases;
 using SimpleBankAPI.WebApi.Models;
+using SimpleBankAPI.WebApi.Controllers;
 
 namespace SimpleBankAPI.Controllers;
 
@@ -16,13 +17,15 @@ public class AccountController : Controller
 {
     private readonly ILogger<AccountController> _logger;
     private readonly IAccountUseCase _useCase;
+    private readonly IUserUseCase _userUseCase;
     private readonly IAuthenticationProvider _provider;
     
 
-    public AccountController(ILogger<AccountController> logger, IAccountUseCase useCase, IAuthenticationProvider provider)
+    public AccountController(ILogger<AccountController> logger, IAccountUseCase useCase, IUserUseCase userUseCase, IAuthenticationProvider provider)
     {
         _logger = logger;
         _useCase = useCase;
+        _userUseCase = userUseCase;
         _provider = provider;
     }
 
@@ -38,18 +41,18 @@ public class AccountController : Controller
         {
             if (!Request.Headers.TryGetValue("Authorization", out StringValues authToken))
                 return BadRequest("Missing Authorization Header.");
-            var resultAuth = _provider.GetToken(authToken);
-            if (!resultAuth.Item1)
-                return BadRequest("Missing User info in Token.");
-            var resultClaims = _provider.GetClaimUser(resultAuth.Item2);
+            var resultClaims = _provider.GetClaimSession(authToken);
             if (!resultClaims.Item1)
-                return BadRequest("Missing User info in Token.");
+                return BadRequest(resultClaims.Item2);
+            var resultSession = await _userUseCase.CheckSession(resultClaims.Item3);
+            if (!resultSession.Item1)
+                return Unauthorized(resultSession.Item2);
 
             var account = new Account
             {
                 Balance = request.Amount,
                 Currency = (Currency)Enum.Parse(typeof(Currency), request.Currency),
-                UserId = resultClaims.Item2.Id
+                UserId = resultClaims.Item3.UserId
             };
             var result = await _useCase.CreateAccount(account);
             if (result.Item1)
@@ -82,14 +85,14 @@ public class AccountController : Controller
         {
             if (!Request.Headers.TryGetValue("Authorization", out StringValues authToken))
                 return BadRequest("Missing Authorization Header.");
-            var resultAuth = _provider.GetToken(authToken);
-            if (!resultAuth.Item1)
-                return BadRequest("Missing User info in Token.");
-            var resultClaims = _provider.GetClaimUser(resultAuth.Item2);
+            var resultClaims = _provider.GetClaimSession(authToken);
             if (!resultClaims.Item1)
-                return BadRequest("Missing User info in Token.");
+                return BadRequest(resultClaims.Item2);
+            var resultSession = await _userUseCase.CheckSession(resultClaims.Item3);
+            if(!resultSession.Item1)
+                return Unauthorized(resultSession.Item2);
             
-            var result = await _useCase.GetAccounts(resultClaims.Item2.Id);
+            var result = await _useCase.GetAccounts(resultClaims.Item3.UserId);
             return Ok(result.Item3.Select(x => new account
             {
                 AccountId = x.Id,
@@ -117,14 +120,14 @@ public class AccountController : Controller
         {
             if (!Request.Headers.TryGetValue("Authorization", out StringValues authToken))
                 return BadRequest("Missing Authorization Header.");
-            var resultAuth = _provider.GetToken(authToken);
-            if (!resultAuth.Item1)
-                return BadRequest("Missing User info in Token.");
-            var resultClaims = _provider.GetClaimUser(resultAuth.Item2);
+            var resultClaims = _provider.GetClaimSession(authToken);
             if (!resultClaims.Item1)
-                return BadRequest("Missing User info in Token.");
-            
-            var result = await _useCase.GetAccountMovements(resultClaims.Item2.Id, id);
+                return BadRequest(resultClaims.Item2);
+            var resultSession = await _userUseCase.CheckSession(resultClaims.Item3);
+            if (!resultSession.Item1)
+                return Unauthorized(resultSession.Item2);
+
+            var result = await _useCase.GetAccountMovements(resultClaims.Item3.UserId, id);
             if (result.Item3 is null)
                 return NotFound(result.Item2);
             else

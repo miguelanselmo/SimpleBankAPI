@@ -8,5 +8,6 @@ public interface IUserUseCase
     
     Task<(bool, string?, User?, Session?)> Login(User user);
     Task<(bool, string?, Session?)> Logout(Session session);
+    Task<(bool, string?, Session?)> CheckSession(Session session);
 
 }

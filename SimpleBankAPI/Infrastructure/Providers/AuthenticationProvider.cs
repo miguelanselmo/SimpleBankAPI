@@ -27,7 +27,7 @@ public class AuthenticationProvider : IAuthenticationProvider
         _key = config["Jwt:Key"];
         _accessTokenDuration = int.Parse(config["Jwt:AccessTokenDuration"]);
     }
-
+    /*
     public (bool, User?) GetClaimUser(string token)
     {
         try
@@ -45,7 +45,8 @@ public class AuthenticationProvider : IAuthenticationProvider
             return (false, null);
         }
     }
-
+    */
+    /*
     public (bool, Session?) GetClaimSession(string token)
     {
         try
@@ -62,6 +63,35 @@ public class AuthenticationProvider : IAuthenticationProvider
             return (false, null);
         }
     }
+    */
+    public (bool, string?, Session?) GetClaimSession(string authToken)
+    {
+        try
+        {
+            var resultAuth = GetToken(authToken);
+            if (!resultAuth.Item1)
+                return (false, "Missing bearer token.", null);            
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var securityToken = (JwtSecurityToken)tokenHandler.ReadToken(resultAuth.Item2);
+            Guid? sessionId = Guid.Parse(securityToken.Claims.FirstOrDefault(c => c.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/sid")?.Value);
+            int? userId = int.Parse(securityToken.Claims.FirstOrDefault(c => c.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value);
+            if (userId is null)
+                return (false, "Missing User info in Token.", null);
+            if (sessionId is null)
+                return (false, "Missing Session info in Token.", null);
+            return (true, null, new Session
+            {
+                Id = sessionId.Value,
+                UserId = userId.Value,
+                TokenAccess = resultAuth.Item2
+            });            
+        }
+        catch (Exception ex)
+        {
+            return (false, ex.Message, null);
+        }
+    }
+
 
     public bool ValidateToken()
     {

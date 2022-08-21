@@ -14,7 +14,7 @@ namespace SimpleBankAPI.WebApi.Controllers;
 
 [Route("simplebankapi/v1/[controller]")]
 [ApiController]
-public class UserController : ControllerBase
+public class UserController : Controller
 {
     private readonly ILogger<UserController> _logger;
     private readonly IUserUseCase _useCase;
@@ -77,14 +77,12 @@ public class UserController : ControllerBase
         {
             User account = new User
             {
-
                 UserName = request.UserName,
                 Password = request.Password
             };
             var result = await _useCase.Login(account);
             if (result.Item1)
             {
-                //Response.Headers.Add("Authorization", (result.Item2);
                 loginResponse response = new loginResponse
                 {
                     AccessToken = result.Item4.TokenAccess,
@@ -123,13 +121,18 @@ public class UserController : ControllerBase
         {
             if (!Request.Headers.TryGetValue("Authorization", out StringValues authToken))
                 return BadRequest("Missing Authorization Header.");
+            var resultClaims = _provider.GetClaimSession(authToken);
+            if (!resultClaims.Item1)
+                return BadRequest(resultClaims.Item2);
+            /*
             var resultAuth = _provider.GetToken(authToken);
             if (!resultAuth.Item1)
                 return BadRequest("Missing Session info in Token.");
             var resultClaims = _provider.GetClaimSession(resultAuth.Item2);
             if (!resultClaims.Item1)
                 return BadRequest("Missing Session info in Token.");
-            var result = await _useCase.Logout(resultClaims.Item2);
+            */
+            var result = await _useCase.Logout(resultClaims.Item3);
             if (result.Item1)
                 return Ok(result.Item3);
             else

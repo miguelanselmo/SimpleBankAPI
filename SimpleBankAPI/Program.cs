@@ -5,7 +5,6 @@ using Microsoft.OpenApi.Models;
 using Npgsql;
 using SimpleBankAPI.Infrastructure.Providers;
 using SimpleBankAPI.Infrastructure.Repositories;
-using SimpleBankAPI.Infrastructure.Repositories.SqlDataAccess;
 using SimpleBankAPI.Core.Usecases;
 using System.Data;
 using System.Text;
@@ -29,12 +28,12 @@ builder.Services.AddScoped<IDbTransaction>(s =>
 {
     //NpgsqlConnection connection = new(builder.Configuration.GetConnectionString("BankDB"));
     NpgsqlConnection connection = (NpgsqlConnection)s.GetRequiredService<IDbConnection>();
-    connection.Open();
+    connection.Open();    
     return connection.BeginTransaction();
 });
-builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IUserRepository, UserCacheRepository>();
 builder.Services.AddScoped<IAccountRepository, AccountRepository>();
-builder.Services.AddScoped<ISessionRepository, SessionRepository>();
+builder.Services.AddScoped<ISessionRepository, SessionCacheRepository>();
 builder.Services.AddScoped<IMovementRepository, MovementRepository>();
 
 builder.Services.AddScoped<IUserUseCase, UserUseCase>();
@@ -114,6 +113,6 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
-
+  
 app.Run();
 

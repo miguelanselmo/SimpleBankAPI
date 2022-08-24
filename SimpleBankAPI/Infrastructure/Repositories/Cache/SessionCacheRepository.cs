@@ -6,7 +6,7 @@ using System.Data;
 
 namespace SimpleBankAPI.Infrastructure.Repositories;
 
-public class SessionCacheRepository : ISessionRepository
+internal class SessionCacheRepository : ISessionRepository
 {
     private readonly IDbTransaction _dbTransaction;
     private readonly IDistributedCache _cache;
@@ -20,7 +20,7 @@ public class SessionCacheRepository : ISessionRepository
 
     public async Task<Session?> ReadById(Guid id)
     {
-        var resultCache = await _cache.GetRecordAsync<Session>(_caheKey + id);
+        var resultCache = await _cache.GetRecordAsync<Session>(_caheKey + ":" + id);
         if (resultCache is null)
         {
             var query = "SELECT * FROM sessions WHERE id=@id";
@@ -35,7 +35,7 @@ public class SessionCacheRepository : ISessionRepository
 
     public async Task<IEnumerable<Session>?> ReadByUser(int userId)
     {
-        var resultCache = await _cache.GetRecordAsync<Session[]>(_caheKey + "*");
+        var resultCache = await _cache.GetRecordAsync<Session[]>(_caheKey + ":" + "*");
         if (resultCache is null)
         {
             var query = "SELECT * FROM sessions WHERE user_id=@user_id";
@@ -47,7 +47,7 @@ public class SessionCacheRepository : ISessionRepository
         else
             return resultCache.Where(x => x.UserId.Equals(userId));
     }
-    
+    /*
     public async Task<IEnumerable<Session>?> ReadAll()
     {
         var resultCache = await _cache.GetRecordAsync<Session[]>(_caheKey + "*");
@@ -60,7 +60,7 @@ public class SessionCacheRepository : ISessionRepository
         else
             return resultCache;
     }
-
+    */
     private static IEnumerable<Session>? Map(IEnumerable<dynamic> dataDb)
     {
         if (dataDb is null) return null;
@@ -94,7 +94,7 @@ public class SessionCacheRepository : ISessionRepository
         parameters.Add("id", data.Id.ToString());
         parameters.Add("user_id", data.UserId);
         var result = await _dbTransaction.Connection.ExecuteAsync(query, parameters, _dbTransaction);
-        if (result > 0) { await _cache.SetRecordAsync(_caheKey + data.Id, data); }
+        if (result > 0) { await _cache.SetRecordAsync(_caheKey + ":" + data.Id, data); }
         return result > 0;
     }
 
@@ -106,10 +106,10 @@ public class SessionCacheRepository : ISessionRepository
         parameters.Add("active", data.Active);
         var result = await _dbTransaction.Connection.ExecuteAsync(query, parameters, _dbTransaction);
         await _cache.RemoveAsync(_caheKey + data.Id);
-        await _cache.SetRecordAsync(_caheKey + data.Id, data);
+        await _cache.SetRecordAsync(_caheKey + ":" + data.Id, data);
         return result > 0;
     }
-
+    /*
     public async Task<bool> Delete(Guid id)
     {
         var query = "DELETE FROM sessions WHERE id=@id";
@@ -119,4 +119,5 @@ public class SessionCacheRepository : ISessionRepository
         await _cache.RemoveAsync(_caheKey + id);
         return result > 0;
     }
+    */
 }

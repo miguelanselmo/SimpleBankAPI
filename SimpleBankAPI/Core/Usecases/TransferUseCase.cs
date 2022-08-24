@@ -6,7 +6,7 @@ using System.Text;
 
 namespace SimpleBankAPI.Core.Usecases;
 
-public class TransferUseCase : ITransferUseCase
+internal class TransferUseCase : ITransferUseCase
 {
     private readonly ILogger<TransferUseCase> _logger;
     private readonly IUnitOfWork _unitOfWork;

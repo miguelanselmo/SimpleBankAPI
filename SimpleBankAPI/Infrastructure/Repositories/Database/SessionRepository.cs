@@ -6,7 +6,7 @@ using System.Data;
 
 namespace SimpleBankAPI.Infrastructure.Repositories;
 
-public class SessionRepository : ISessionRepository
+internal class SessionRepository : ISessionRepository
 {
     private readonly IDbTransaction _dbTransaction;
 
@@ -32,13 +32,14 @@ public class SessionRepository : ISessionRepository
         var resultDb = await _dbTransaction.Connection.QueryAsync<object>(query, parameters);
         return Map(resultDb);
     }
+    /*
     public async Task<IEnumerable<Session>?> ReadAll()
     {
         var query = "SELECT * FROM sessions";
         var resultDb = await _dbTransaction.Connection.QueryAsync(query);
         return Map(resultDb);
     }
-
+    */
     private static IEnumerable<Session>? Map(IEnumerable<dynamic> dataDb)
     {
         if (dataDb is null) return null;
@@ -84,7 +85,7 @@ public class SessionRepository : ISessionRepository
         var result = await _dbTransaction.Connection.ExecuteAsync(query, parameters, _dbTransaction);
         return result > 0;
     }
-
+    /*
     public async Task<bool> Delete(Guid id)
     {
         var query = "DELETE FROM sessions WHERE id=@id";
@@ -93,4 +94,5 @@ public class SessionRepository : ISessionRepository
         var result = await _dbTransaction.Connection.ExecuteAsync(query, parameters, _dbTransaction);
         return result > 0;
     }
+    */
 }

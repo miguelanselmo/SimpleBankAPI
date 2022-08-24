@@ -5,7 +5,7 @@ using SimpleBankAPI.WebApi.Models;
 
 namespace SimpleBankAPI.WebApi.Validators;
 
-public class TransferValidator : AbstractValidator<transferRequest>
+internal class TransferValidator : AbstractValidator<transferRequest>
 {
     public TransferValidator()
     {

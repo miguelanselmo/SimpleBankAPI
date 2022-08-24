@@ -7,7 +7,7 @@ using System.Data;
 
 namespace SimpleBankAPI.Infrastructure.Repositories;
 
-public class AccountRepository : IAccountRepository
+internal class AccountRepository : IAccountRepository
 {
     private readonly IDbTransaction _dbTransaction;
     
@@ -43,14 +43,14 @@ public class AccountRepository : IAccountRepository
         var resultDb = await _dbTransaction.Connection.QueryAsync<object>(query, parameters, _dbTransaction);
         return Map(resultDb);
     }
-
+    /*
     public async Task<IEnumerable<Account>?> ReadAll()
     {
         var query = "SELECT * FROM accounts";
         var resultDb = await _dbTransaction.Connection.QueryAsync(query);
         return Map(resultDb);
     }
-
+    */
     private static IEnumerable<Account>? Map(IEnumerable<dynamic> dataDb)
     {
         if (dataDb is null) return null;
@@ -98,7 +98,7 @@ public class AccountRepository : IAccountRepository
         var result = await _dbTransaction.Connection.ExecuteAsync(query, parameters, _dbTransaction);
         return result > 0;
     }
-
+    /*
     public async Task<bool> Delete(int id)
     {
         var query = "DELETE FROM accounts WHERE id=@id";
@@ -107,5 +107,5 @@ public class AccountRepository : IAccountRepository
         var result = await _dbTransaction.Connection.ExecuteAsync(query, parameters, _dbTransaction);
         return result > 0;
     }
-
+    */
 }

@@ -43,6 +43,10 @@ public struct loginResponse
     public string AccessToken { get; set; }
     [JsonPropertyNameAttribute("access_token_expires_at")]
     public DateTime AccessTokenExpiresAt { get; set; }
+    [JsonPropertyNameAttribute("refresh_token")]
+    public string RefreshToken { get; set; }
+    [JsonPropertyNameAttribute("refresh_token_expires_at")]
+    public DateTime RefreshTokenExpiresAt { get; set; }
     [JsonPropertyNameAttribute("session_id")]
     public string SessionId { get; set; }
     [JsonPropertyNameAttribute("user")]

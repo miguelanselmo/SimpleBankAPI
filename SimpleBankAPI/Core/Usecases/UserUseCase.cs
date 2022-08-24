@@ -9,7 +9,7 @@ using System.Text;
 
 namespace SimpleBankAPI.Core.Usecases;
 
-public class UserUseCase : IUserUseCase
+internal class UserUseCase : IUserUseCase
 {
     private readonly ILogger<UserUseCase> _logger;
     private readonly IAuthenticationProvider _provider;
@@ -80,7 +80,32 @@ public class UserUseCase : IUserUseCase
             if (commit) _unitOfWork.Commit(); else _unitOfWork.Rollback();
         }
     }
-
+    
+    public async Task<(bool, string?, User?, Session?)> RenewLogin(Session session)
+    {
+        bool commit = false;
+        try
+        {
+            var userDb = await _unitOfWork.UserRepository.ReadById(session.UserId);
+            if (userDb is not null)
+            {
+                session = _provider.RenewToken(session, userDb);
+                //session.Active = true;
+                //session.UserId = userDb.Id;
+                //var result = await _unitOfWork.SessionRepository.Create(session);
+                //commit = result;
+                //return result ? (true, null, userDb, session) : (false, "Error creating session", null, null);
+                return (true, null, userDb, session);
+            }
+            else
+                return (false, "User not found", null, null);
+        }
+        finally
+        {
+            if (commit) _unitOfWork.Commit(); else _unitOfWork.Rollback();
+        }
+    }
+    
     public async Task<(bool, string?, Session?)> Logout(Session session)
     {
         bool commit = false;

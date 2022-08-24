@@ -5,7 +5,7 @@ using SimpleBankAPI.WebApi.Models;
 
 namespace SimpleBankAPI.WebApi.Validators;
 
-public class CreateAccountValidator : AbstractValidator<createAccountRequest>
+internal class CreateAccountValidator : AbstractValidator<createAccountRequest>
 {
     public CreateAccountValidator()
     {

@@ -9,5 +9,5 @@ public interface IUserRepository
     Task<IEnumerable<User>?> ReadAll();
     Task<(bool,int?)> Create(User data);
     Task<bool> Update(User dataModel);
-    Task<bool> Delete(int id);
+   // Task<bool> Delete(int id);
 }

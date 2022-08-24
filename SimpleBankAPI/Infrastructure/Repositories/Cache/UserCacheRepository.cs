@@ -6,11 +6,11 @@ using System.Data;
 
 namespace SimpleBankAPI.Infrastructure.Repositories;
 
-public class UserCacheRepository : IUserRepository
+internal class UserCacheRepository : IUserRepository
 {
     private readonly IDbTransaction _dbTransaction;
     private readonly IDistributedCache _cache;
-    private const string _caheKey = "User";
+    private const string _caheKey = "user";
 
     public UserCacheRepository(IDbTransaction dbTransaction, IDistributedCache cache)
     {
@@ -20,7 +20,7 @@ public class UserCacheRepository : IUserRepository
 
     public async Task<User?> ReadById(int id)
     {
-        var resultCache = await _cache.GetRecordAsync<User>(_caheKey+id);
+        var resultCache = await _cache.GetRecordAsync<User>(_caheKey + ":" + id);
         if (resultCache is null)
         {
             var query = "SELECT * FROM users WHERE id=@id";
@@ -28,7 +28,7 @@ public class UserCacheRepository : IUserRepository
             parameters.Add("id", id);
             var resultDb = await _dbTransaction.Connection.QueryFirstOrDefaultAsync<object>(query, parameters);
             var data = Map(resultDb);
-            await _cache.SetRecordAsync(_caheKey+id, data);
+            await _cache.SetRecordAsync(_caheKey + ":" + id, data);
             return data;
         }
         else
@@ -37,32 +37,33 @@ public class UserCacheRepository : IUserRepository
 
     public async Task<User?> ReadByName(string name)
     {
-        var resultCache = await _cache.GetRecordAsync<User[]>(_caheKey+"*");
+        var resultCache = await _cache.GetRecordAsync<User[]>(_caheKey+":*");
         if (resultCache is null)
         {
             var query = "SELECT * FROM users WHERE username=@username";
             var parameters = new DynamicParameters();
             parameters.Add("username", name);
             var resultDb = await _dbTransaction.Connection.QueryFirstOrDefaultAsync<object>(query, parameters);
-            return Map(resultDb);
+            var data = Map(resultDb);
+            await _cache.SetRecordAsync(_caheKey + ":" + data.Id, data);
+            return data;
         }
         else
             return resultCache.Where(x => x.UserName.Equals(name)).FirstOrDefault();
     }
     public async Task<IEnumerable<User>?> ReadAll()
     {
-        var resultCache = await _cache.GetRecordAsync<User[]>(_caheKey+"*");
+        var resultCache = await _cache.GetRecordAsync<User[]>(_caheKey+":*");
         if (resultCache is null)
         {
             var query = "SELECT * FROM users";
             var resultDb = await _dbTransaction.Connection.QueryAsync(query);
             var data = Map(resultDb);
-            await _cache.SetRecordAsync(_caheKey, data);
+            foreach(User user in resultDb) await _cache.SetRecordAsync(_caheKey + ":" + user.Id, data);
             return data;
         }
         else
             return resultCache;
-
     }
 
     private static IEnumerable<User>? Map(IEnumerable<dynamic> dataDb)
@@ -104,7 +105,7 @@ public class UserCacheRepository : IUserRepository
         parameters.Add("full_name", data.FullName);
         parameters.Add("email", data.Email);
         var result = await _dbTransaction.Connection.ExecuteScalarAsync<int>(query, parameters, _dbTransaction);
-        if (result > 0) { data.Id = result; await _cache.SetRecordAsync(_caheKey + data.Id, data); }
+        if (result > 0) { data.Id = result; await _cache.SetRecordAsync(_caheKey+":"+data.Id, data); }
         return result > 0 ? (true, result) : (false, null);
     }
 
@@ -119,18 +120,19 @@ public class UserCacheRepository : IUserRepository
         parameters.Add("full_name", data.FullName);
         parameters.Add("email", data.Email);
         var result = await _dbTransaction.Connection.ExecuteAsync(query, parameters, _dbTransaction);
-        await _cache.RemoveAsync(_caheKey+data.Id);
-        await _cache.SetRecordAsync(_caheKey+data.Id, data);        
+        await _cache.RemoveAsync(_caheKey + ":" + data.Id);
+        await _cache.SetRecordAsync(_caheKey + ":" + data.Id, data);        
         return result > 0;
     }
-
+    /*
     public async Task<bool> Delete(int id)
     {
         var query = "DELETE FROM users WHERE id=@id";
         var parameters = new DynamicParameters();
         parameters.Add("id", id);
         var result = await _dbTransaction.Connection.ExecuteAsync(query, parameters, _dbTransaction);
-        await _cache.RemoveAsync(_caheKey+id);
+        await _cache.RemoveAsync(_caheKey + ":" + id);
         return result > 0;
     }
+    */
 }

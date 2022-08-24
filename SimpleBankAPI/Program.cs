@@ -20,20 +20,18 @@ builder.Host.UseSerilog((ctx, lc) => lc
 builder.Services.AddSingleton<IAuthenticationProvider, AuthenticationProvider>();
 //builder.Services.AddSingleton<IConfiguration>(Configuration);
 //builder.Services.AddSingleton<NpgsqlConnection>();
-//builder.Services.AddSingleton<IDbConnection, DbConnection>();
 //builder.Services.AddSingleton<ISqlDataAccess, SqlDataAccess>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IDbConnection>((s) => new NpgsqlConnection(builder.Configuration.GetConnectionString("BankDB")));
 builder.Services.AddScoped<IDbTransaction>(s =>
 {
-    //NpgsqlConnection connection = new(builder.Configuration.GetConnectionString("BankDB"));
     NpgsqlConnection connection = (NpgsqlConnection)s.GetRequiredService<IDbConnection>();
     connection.Open();    
     return connection.BeginTransaction();
 });
-builder.Services.AddScoped<IUserRepository, UserCacheRepository>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IAccountRepository, AccountRepository>();
-builder.Services.AddScoped<ISessionRepository, SessionCacheRepository>();
+builder.Services.AddScoped<ISessionRepository, SessionRepository>();
 builder.Services.AddScoped<IMovementRepository, MovementRepository>();
 
 builder.Services.AddScoped<IUserUseCase, UserUseCase>();
@@ -113,6 +111,21 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
-  
+
+/*
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
+    {
+        var repository = services.GetRequiredService<IUserRepository>();
+        repository.ReadAll();
+    }
+    catch (Exception ex)
+    {
+        
+    }
+}
+*/
 app.Run();
 

@@ -3,7 +3,7 @@ using SimpleBankAPI.WebApi.Models;
 
 namespace SimpleBankAPI.WebApi.Validators;
 
-public class RegisterValidator : AbstractValidator<registerRequest>
+internal class RegisterValidator : AbstractValidator<registerRequest>
 {
     public RegisterValidator()
     {
@@ -14,7 +14,7 @@ public class RegisterValidator : AbstractValidator<registerRequest>
     }
 }
 
-public class LoginValidator : AbstractValidator<loginRequest>
+internal class LoginValidator : AbstractValidator<loginRequest>
 {
     public LoginValidator()
     {

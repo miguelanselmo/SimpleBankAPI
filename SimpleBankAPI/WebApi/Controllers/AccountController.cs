@@ -19,7 +19,7 @@ public class AccountController : Controller
     private readonly IAccountUseCase _useCase;
     private readonly IUserUseCase _userUseCase;
     private readonly IAuthenticationProvider _provider;
-    
+
 
     public AccountController(ILogger<AccountController> logger, IAccountUseCase useCase, IUserUseCase userUseCase, IAuthenticationProvider provider)
     {
@@ -89,9 +89,9 @@ public class AccountController : Controller
             if (!resultClaims.Item1)
                 return BadRequest(resultClaims.Item2);
             var resultSession = await _userUseCase.CheckSession(resultClaims.Item3);
-            if(!resultSession.Item1)
+            if (!resultSession.Item1)
                 return Unauthorized(resultSession.Item2);
-            
+
             var result = await _useCase.GetAccounts(resultClaims.Item3.UserId);
             return Ok(result.Item3.Select(x => new account
             {
@@ -151,33 +151,3 @@ public class AccountController : Controller
         }
     }
 }
-
-/*
-public struct createAccountRequest {
-    public decimal amount { get; set; }
-    public string currency { get; set; }
-
-}
-
-public struct createAccountResponse
-{
-    public int account_id { get; set; }
-    public decimal balance { get; set; }
-    public string currency { get; set; }
-}
-
-public struct account
-{
-    public int account_id { get; set; }
-    public decimal balance { get; set; }
-    public string currency { get; set; }
-    public DateTime created_at { get; set; }
-    public IEnumerable<movements>? movs { get; set; }
-}
-
-public struct movements
-{
-    public decimal amount { get; set; }
-    public DateTime created_at { get; set; }
-}
-*/

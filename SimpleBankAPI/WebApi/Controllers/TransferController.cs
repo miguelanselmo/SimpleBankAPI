@@ -65,17 +65,3 @@ public class TransferController : Controller
         }
    }
 }
-/*
-public struct transferRequest
-{
-    public decimal amount { get; set; }
-    public int from_account_id { get; set; }
-    public int to_account_id { get; set; }    
-}
-
-public struct transferResponse
-{
-    public decimal amount { get; set; }
-    public decimal balance { get; set; }
-}
-*/

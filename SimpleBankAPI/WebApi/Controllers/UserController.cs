@@ -87,6 +87,8 @@ public class UserController : Controller
                 {
                     AccessToken = result.Item4.TokenAccess,
                     AccessTokenExpiresAt = result.Item4.TokenAccessExpireAt,
+                    RefreshToken = result.Item4.TokenRefresh,
+                    RefreshTokenExpiresAt = result.Item4.TokenRefreshExpireAt,
                     SessionId = result.Item4.Id.ToString(),
                     User = new registerResponse
                     {
@@ -111,7 +113,7 @@ public class UserController : Controller
 
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [HttpPost("logout", Name = "Logout")]
-    [ProducesResponseType(typeof(Session), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(loginResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(string), StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
@@ -124,14 +126,6 @@ public class UserController : Controller
             var resultClaims = _provider.GetClaimSession(authToken);
             if (!resultClaims.Item1)
                 return BadRequest(resultClaims.Item2);
-            /*
-            var resultAuth = _provider.GetToken(authToken);
-            if (!resultAuth.Item1)
-                return BadRequest("Missing Session info in Token.");
-            var resultClaims = _provider.GetClaimSession(resultAuth.Item2);
-            if (!resultClaims.Item1)
-                return BadRequest("Missing Session info in Token.");
-            */
             var result = await _useCase.Logout(resultClaims.Item3);
             if (result.Item1)
                 return Ok(result.Item3);
@@ -144,47 +138,58 @@ public class UserController : Controller
             return Problem(ex.Message);
         }
     }
+    
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [HttpPost("RenewLogin", Name = "RenewLogin")]
+    [ProducesResponseType(typeof(loginResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(string), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<loginResponse>> RenewLogin()
+    {
+        try
+        {
+            if (!Request.Headers.TryGetValue("Authorization", out StringValues refreshToken))
+                return BadRequest("Missing Authorization Header.");
+            var resultClaims = _provider.GetClaimSession(refreshToken);
+            /*
+             * Id = sessionId.Value,
+                UserId = userId.Value,
+                TokenAccess = resultAuth.Item2
+             */
+            if (!resultClaims.Item1)
+                return BadRequest(resultClaims.Item2);
+            var resultSession = await _useCase.CheckSession(resultClaims.Item3);
+            if (!resultSession.Item1)
+                return Unauthorized(resultSession.Item2);
+
+            var resultRenewSession = await _useCase.RenewLogin(resultSession.Item3);
+            if (!resultRenewSession.Item1)
+                return Unauthorized(resultSession.Item2);
+
+            loginResponse response = new loginResponse
+            {
+                AccessToken = resultRenewSession.Item4.TokenAccess,
+                AccessTokenExpiresAt = resultRenewSession.Item4.TokenAccessExpireAt,
+                RefreshToken = refreshToken,
+                RefreshTokenExpiresAt = resultRenewSession.Item4.TokenRefreshExpireAt,
+                SessionId = resultRenewSession.Item4.Id.ToString(),
+                User = new registerResponse
+                {
+                    UserId = resultRenewSession.Item3.Id,
+                    UserName = resultRenewSession.Item3.UserName,
+                    Email = resultRenewSession.Item3.Email,
+                    FullName = resultRenewSession.Item3.FullName,
+                    CreatedAt = resultRenewSession.Item3.CreatedAt
+                }
+            };
+            return Ok(response);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex.Message, ex.InnerException);
+            return Problem(ex.Message);
+        }
+    }
 }
 
-/*
-public struct registerRequest
-{
-    [JsonPropertyNameAttribute("user_name")]
-    public string UserName { get; set; }
-    [JsonPropertyNameAttribute("email")]
-    public string Email { get; set; }
-    [JsonPropertyNameAttribute("password")]
-    public string Password { get; set; }
-    [JsonPropertyNameAttribute("full_name")]
-    public string FullName { get; set; }    
-}
-
-public struct registerResponse
-{
-    [JsonPropertyNameAttribute("user_id")]
-    public int UserId { get; set; }
-    [JsonPropertyNameAttribute("user_name")]
-    public string UserName { get; set; }
-    [JsonPropertyNameAttribute("email")]
-    public string Email { get; set; }
-    [JsonPropertyNameAttribute("full_name")]
-    public string FullName { get; set; }
-    [JsonPropertyNameAttribute("created_at")]
-    public DateTime CreatedAt { get; set; }
-}
-*/
-/*
-public struct loginRequest
-{
-    public string user_name { get; set; }
-    public string password { get; set; }    
-}
-
-public struct loginResponse
-{
-    public string access_token { get; set; }
-    public DateTime access_token_expires_at { get; set; }
-    public string session_id { get; set; }
-    public registerResponse user { get; set; }
-}
-*/

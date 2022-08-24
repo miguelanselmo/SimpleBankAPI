@@ -7,7 +7,7 @@ using System.Data;
 
 namespace SimpleBankAPI.Infrastructure.Repositories;
 
-public class AccountCacheRepository : IAccountRepository
+internal class AccountCacheRepository : IAccountRepository
 {
     private readonly IDbTransaction _dbTransaction;
     private readonly IDistributedCache _cache;
@@ -21,7 +21,7 @@ public class AccountCacheRepository : IAccountRepository
 
     public async Task<Account?> ReadById(int userId, int id)
     {
-        var resultCache = await _cache.GetRecordAsync<Account[]>(_caheKey+id);
+        var resultCache = await _cache.GetRecordAsync<Account[]>(_caheKey + ":" + id);
         if (resultCache is null)
         {
             var query = "SELECT * FROM accounts WHERE id=@id AND user_id=@user_id";
@@ -39,7 +39,7 @@ public class AccountCacheRepository : IAccountRepository
 
     public async Task<Account?> ReadById(int id)
     {
-        var resultCache = await _cache.GetRecordAsync<Account[]>(_caheKey+id);
+        var resultCache = await _cache.GetRecordAsync<Account[]>(_caheKey + ":" + id);
         if (resultCache is null)
         {
             var query = "SELECT * FROM accounts WHERE id=@id";
@@ -56,7 +56,7 @@ public class AccountCacheRepository : IAccountRepository
 
     public async Task<IEnumerable<Account>?> ReadByUser(int userId)
     {
-        var resultCache = await _cache.GetRecordAsync<Account[]>(_caheKey+"*");
+        var resultCache = await _cache.GetRecordAsync<Account[]>(_caheKey + ":" + "*");
         if (resultCache is null)
         {
             var query = "SELECT * FROM accounts WHERE user_id=@user_id";
@@ -70,8 +70,8 @@ public class AccountCacheRepository : IAccountRepository
         else
             return resultCache.Where(x => x.UserId.Equals(userId));
     }
-
-public async Task<IEnumerable<Account>?> ReadAll()
+    /*
+    public async Task<IEnumerable<Account>?> ReadAll()
     {
         var resultCache = await _cache.GetRecordAsync<Account[]>(_caheKey);
         if (resultCache is null)
@@ -84,7 +84,7 @@ public async Task<IEnumerable<Account>?> ReadAll()
         else
             return resultCache;
     }
-
+    */
     private static IEnumerable<Account>? Map(IEnumerable<dynamic> dataDb)
     {
         if (dataDb is null) return null;
@@ -120,7 +120,7 @@ public async Task<IEnumerable<Account>?> ReadAll()
         parameters.Add("balance", data.Balance);
         parameters.Add("currency", data.Currency);
         var result = await _dbTransaction.Connection.ExecuteScalarAsync<int>(query, parameters, _dbTransaction);
-        if (result > 0) { data.Id = result; await _cache.SetRecordAsync(_caheKey + data.Id, data); }
+        if (result > 0) { data.Id = result; await _cache.SetRecordAsync(_caheKey + ":" + data.Id, data); }
         return result > 0 ? (true, result) : (false, null);
     }
 
@@ -132,10 +132,10 @@ public async Task<IEnumerable<Account>?> ReadAll()
         parameters.Add("balance", data.Balance);
         var result = await _dbTransaction.Connection.ExecuteAsync(query, parameters, _dbTransaction);
         await _cache.RemoveAsync(_caheKey+data.Id);
-        await _cache.SetRecordAsync(_caheKey + data.Id, data);
+        await _cache.SetRecordAsync(_caheKey + ":" + data.Id, data);
         return result > 0;
     }
-
+    /*
     public async Task<bool> Delete(int id)
     {
         var query = "DELETE FROM accounts WHERE id=@id";
@@ -145,5 +145,5 @@ public async Task<IEnumerable<Account>?> ReadAll()
         await _cache.RemoveAsync(_caheKey+id);
         return result > 0;
     }
-
+    */
 }

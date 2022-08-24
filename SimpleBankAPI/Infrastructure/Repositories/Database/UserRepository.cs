@@ -6,7 +6,7 @@ using System.Data;
 
 namespace SimpleBankAPI.Infrastructure.Repositories;
 
-public class UserRepository : IUserRepository
+internal class UserRepository : IUserRepository
 {
     private readonly IDbTransaction _dbTransaction;
 
@@ -94,7 +94,7 @@ public class UserRepository : IUserRepository
         var result = await _dbTransaction.Connection.ExecuteAsync(query, parameters, _dbTransaction);
         return result > 0;
     }
-
+    /*
     public async Task<bool> Delete(int id)
     {
         var query = "DELETE FROM users WHERE id=@id";
@@ -103,4 +103,5 @@ public class UserRepository : IUserRepository
         var result = await _dbTransaction.Connection.ExecuteAsync(query, parameters, _dbTransaction);
         return result > 0;
     }
+    */
 }

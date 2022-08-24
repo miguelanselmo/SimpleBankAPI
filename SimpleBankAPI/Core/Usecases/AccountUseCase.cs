@@ -3,7 +3,7 @@ using SimpleBankAPI.Infrastructure.Repositories;
 
 namespace SimpleBankAPI.Core.Usecases;
 
-public class AccountUseCase : IAccountUseCase
+internal class AccountUseCase : IAccountUseCase
 {
     private readonly ILogger<AccountUseCase> _logger;
     private readonly IUnitOfWork _unitOfWork;

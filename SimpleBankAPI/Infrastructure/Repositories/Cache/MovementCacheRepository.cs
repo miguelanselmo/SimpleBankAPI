@@ -8,7 +8,7 @@ using System.Text.Json;
 
 namespace SimpleBankAPI.Infrastructure.Repositories;
 
-public class MovementCacheRepository : IMovementRepository
+internal class MovementCacheRepository : IMovementRepository
 {
     private readonly IDbTransaction _dbTransaction;
     private readonly IDistributedCache _cache;
@@ -22,7 +22,7 @@ public class MovementCacheRepository : IMovementRepository
 
     public async Task<Movement?> ReadById(int accountId, int id)
     {
-        var resultCache = await _cache.GetRecordAsync<Movement>(_caheKey + id);
+        var resultCache = await _cache.GetRecordAsync<Movement>(_caheKey + ":" + id);
         if (resultCache is null)
         {
             var query = "SELECT * FROM movements WHERE account_id=@Id AND id=@id";
@@ -38,7 +38,7 @@ public class MovementCacheRepository : IMovementRepository
 
     public async Task<IEnumerable<Movement>?> ReadByAccount(int accountId)
     {
-        var resultCache = await _cache.GetRecordAsync<Movement[]>(_caheKey+"*");
+        var resultCache = await _cache.GetRecordAsync<Movement[]>(_caheKey + ":" + "*");
         if (resultCache is null)
         {
             var query = "SELECT * FROM movements WHERE account_id=@account_id";
@@ -51,6 +51,7 @@ public class MovementCacheRepository : IMovementRepository
             return resultCache.Where(x => x.AccountId.Equals(accountId));
     }
 
+    /*
     public async Task<IEnumerable<Movement>?> ReadAll()
     {
         var resultCache = await _cache.GetRecordAsync<Movement[]>(_caheKey);
@@ -63,7 +64,7 @@ public class MovementCacheRepository : IMovementRepository
         else
             return resultCache;
     }
-
+    */
     private static IEnumerable<Movement>? Map(IEnumerable<dynamic> dataDb)
     {
         IEnumerable<Movement> MovementList = dataDb.Select(x => new Movement
@@ -98,7 +99,7 @@ public class MovementCacheRepository : IMovementRepository
         parameters.Add("amount", data.Amount);
         parameters.Add("balance", data.Balance);
         var result = await _dbTransaction.Connection.ExecuteScalarAsync<int>(query, parameters, _dbTransaction);
-        if (result > 0) { data.Id = result; await _cache.SetRecordAsync(_caheKey + data.Id, data); }
+        if (result > 0) { data.Id = result; await _cache.SetRecordAsync(_caheKey + ":" + data.Id, data); }
         return result > 0 ? (true, result) : (false, null);
     }
 
@@ -111,7 +112,7 @@ public class MovementCacheRepository : IMovementRepository
         var result = await _dbTransaction.Connection.ExecuteScalarAsync<int>(query, parameters, _dbTransaction);
         return result > 0 ? (true, result) : (false, null);
     }
-
+    /*
     public async Task<bool> Update(Movement data)
     {
         var query = "UPDATE movements SET amount=@amount, balance=@balance WHERE id=@id";
@@ -134,4 +135,5 @@ public class MovementCacheRepository : IMovementRepository
         await _cache.RemoveAsync(_caheKey + id);
         return result > 0;
     }
+    */
 }

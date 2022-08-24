@@ -12,16 +12,12 @@ public class UnitOfWork : IUnitOfWork, IDisposable
     //public ITransferRepository transferRepository { get; }
     public ISessionRepository SessionRepository { get; }
 
-    //private readonly ISqlDataAccess _db;
     private readonly IDistributedCache _cache;
-    //private const string _connectionId = "BankDB";
     private readonly IDbTransaction _dbTransaction;
-    //private readonly IDbConnection _dbConnection;
-    //private readonly ISqlDataAccess _db;
     //Guid _id = Guid.Empty;
 
     //
-    public UnitOfWork(IDbTransaction dbTransaction/*, ISqlDataAccess db*//*, IDbConnection dbConnection*/, IDistributedCache cache, IUserRepository userRepository, IAccountRepository accountRepository, IMovementRepository movementRepository, ISessionRepository sessionRepository)
+    public UnitOfWork(IDbTransaction dbTransaction, IDistributedCache cache, IUserRepository userRepository, IAccountRepository accountRepository, IMovementRepository movementRepository, ISessionRepository sessionRepository)
     {
         UserRepository = userRepository;
         AccountRepository = accountRepository;
@@ -30,9 +26,7 @@ public class UnitOfWork : IUnitOfWork, IDisposable
         //this.transferRepository = transferRepository;
 
         _dbTransaction = dbTransaction;
-        //_dbConnection = dbConnection;
         _cache = cache;
-        //_db = db;
     }
 
     public void Commit()

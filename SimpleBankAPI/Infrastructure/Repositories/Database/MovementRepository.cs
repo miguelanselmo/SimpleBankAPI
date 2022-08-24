@@ -8,7 +8,7 @@ using System.Text.Json;
 
 namespace SimpleBankAPI.Infrastructure.Repositories;
 
-public class MovementRepository : IMovementRepository
+internal class MovementRepository : IMovementRepository
 {
     private readonly IDbTransaction _dbTransaction;
 
@@ -35,14 +35,14 @@ public class MovementRepository : IMovementRepository
         var resultDb = await _dbTransaction.Connection.QueryAsync<object>(query, parameters);
         return Map(resultDb);
     }
-
+    /*
     public async Task<IEnumerable<Movement>?> ReadAll()
     {
         var query = "SELECT * FROM movements";
         var resultDb = await _dbTransaction.Connection.QueryAsync(query);
         return Map(resultDb);
     }
-
+    */
     private static IEnumerable<Movement>? Map(IEnumerable<dynamic> dataDb)
     {
         IEnumerable<Movement> MovementList = dataDb.Select(x => new Movement
@@ -89,7 +89,7 @@ public class MovementRepository : IMovementRepository
         var result = await _dbTransaction.Connection.ExecuteScalarAsync<int>(query, parameters, _dbTransaction);
         return result > 0 ? (true, result) : (false, null);
     }
-
+    /*
     public async Task<bool> Update(Movement data)
     {
         var query = "UPDATE movements SET amount=@amount, balance=@balance WHERE id=@id";
@@ -109,4 +109,5 @@ public class MovementRepository : IMovementRepository
         var result = await _dbTransaction.Connection.ExecuteAsync(query, parameters, _dbTransaction);
         return result > 0;
     }
+    */
 }

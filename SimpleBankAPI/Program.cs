@@ -10,6 +10,8 @@ using System.Data;
 using System.Text;
 using SimpleBankAPI.WebApi.Models;
 using Serilog;
+using FluentValidation;
+using SimpleBankAPI.WebApi.Validators;
 
 var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
@@ -29,19 +31,22 @@ builder.Services.AddScoped<IDbTransaction>(s =>
     connection.Open();    
     return connection.BeginTransaction();
 });
-builder.Services.AddScoped<IUserRepository, UserRepository>();
-builder.Services.AddScoped<IAccountRepository, AccountRepository>();
-builder.Services.AddScoped<ISessionRepository, SessionRepository>();
-builder.Services.AddScoped<IMovementRepository, MovementRepository>();
+builder.Services.AddTransient<IUserRepository, UserRepository>();
+builder.Services.AddTransient<IAccountRepository, AccountRepository>();
+builder.Services.AddTransient<ISessionRepository, SessionRepository>();
+builder.Services.AddTransient<IMovementRepository, MovementRepository>();
 
 builder.Services.AddScoped<IUserUseCase, UserUseCase>();
 builder.Services.AddScoped<IAccountUseCase, AccountUseCase>();
 builder.Services.AddScoped<ITransferUseCase, TransferUseCase>();
 
-builder.Services.AddFluentValidation(x => x.RegisterValidatorsFromAssemblyContaining<registerRequest>());
-builder.Services.AddFluentValidation(x => x.RegisterValidatorsFromAssemblyContaining<loginRequest>());
-builder.Services.AddFluentValidation(x => x.RegisterValidatorsFromAssemblyContaining<createAccountRequest>());
-builder.Services.AddFluentValidation(x => x.RegisterValidatorsFromAssemblyContaining<transferRequest>());
+//builder.Services.AddFluentValidationAutoValidation();
+//builder.Services.AddFluentValidationClientsideAdapters();
+//builder.Services.AddScoped<IValidator<registerRequest>, RegisterValidator>();
+
+builder.Services.AddFluentValidation(x => x.RegisterValidatorsFromAssemblyContaining<RegisterValidator>());
+builder.Services.AddFluentValidation(x => x.RegisterValidatorsFromAssemblyContaining<TransferValidator>());
+builder.Services.AddFluentValidation(x => x.RegisterValidatorsFromAssemblyContaining<CreateAccountValidator>());
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
 {

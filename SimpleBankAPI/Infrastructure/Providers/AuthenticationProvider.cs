@@ -115,7 +115,7 @@ public class AuthenticationProvider : IAuthenticationProvider
     private static Session GenerateRefreshToken(Session session)
     {
         var randomNumber = new byte[32];
-        using (var generator = new RNGCryptoServiceProvider())
+        using (var generator = RandomNumberGenerator.Create())
         {
             generator.GetBytes(randomNumber);
             session.TokenRefresh = Convert.ToBase64String(randomNumber);

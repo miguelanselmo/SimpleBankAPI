@@ -70,6 +70,8 @@ internal class SessionCacheRepository : ISessionRepository
             UserId = (int)x.user_id,
             Active = (bool)x.active,
             CreatedAt = (DateTime)x.created_at,
+            TokenRefresh = (string)x.refresk_token,
+            TokenRefreshExpireAt = (DateTime)x.refresk_token_expire_at,
         });
         return sessionList;
     }
@@ -83,6 +85,8 @@ internal class SessionCacheRepository : ISessionRepository
             UserId = (int)x.user_id,
             Active = (bool)x.active,
             CreatedAt = (DateTime)x.created_at,
+            TokenRefresh = (string)x.refresk_token,
+            TokenRefreshExpireAt = (DateTime)x.refresk_token_expire_at,
         };
     }
 

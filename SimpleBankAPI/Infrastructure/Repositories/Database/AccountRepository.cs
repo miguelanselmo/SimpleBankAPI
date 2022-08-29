@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Caching.Distributed;
 using SimpleBankAPI.Core.Entities;
 using SimpleBankAPI.Core.Enums;
+using SimpleBankAPI.Infrastructure.Repositories.Mapper;
 using SimpleBankAPI.Infrastructure.Repositories.SqlDataAccess;
 using System.Data;
 
@@ -23,7 +24,7 @@ internal class AccountRepository : IAccountRepository
         parameters.Add("id", id);
         parameters.Add("user_id", userId);
         var resultDb = await _dbTransaction.Connection.QueryFirstOrDefaultAsync<object>(query, parameters, _dbTransaction);
-        return Map(resultDb);
+        return AccountMapper.Map(resultDb);
     }
 
     public async Task<Account?> ReadById(int id)
@@ -32,7 +33,7 @@ internal class AccountRepository : IAccountRepository
         var parameters = new DynamicParameters();
         parameters.Add("id", id);
         var resultDb = await _dbTransaction.Connection.QueryFirstOrDefaultAsync<object>(query, parameters, _dbTransaction);
-        return Map(resultDb);
+        return AccountMapper.Map(resultDb);
     }
 
     public async Task<IEnumerable<Account>?> ReadByUser(int userId)
@@ -41,7 +42,7 @@ internal class AccountRepository : IAccountRepository
         var parameters = new DynamicParameters();
         parameters.Add("user_id", userId);
         var resultDb = await _dbTransaction.Connection.QueryAsync<object>(query, parameters, _dbTransaction);
-        return Map(resultDb);
+        return AccountMapper.Map(resultDb);
     }
     /*
     public async Task<IEnumerable<Account>?> ReadAll()
@@ -51,31 +52,6 @@ internal class AccountRepository : IAccountRepository
         return Map(resultDb);
     }
     */
-    private static IEnumerable<Account>? Map(IEnumerable<dynamic> dataDb)
-    {
-        if (dataDb is null) return null;
-        return dataDb.Select(x => new Account
-        {
-            Id = (int)x.id,
-            UserId = (int)x.user_id,
-            Balance = (decimal)x.balance,
-            Currency = Enum.Parse<Currency>(x.currency),
-            CreatedAt = (DateTime)x.created_at
-        });
-    }
-
-    private static Account? Map(dynamic x)
-    {
-        if (x is null) return null;
-        return new Account
-        {
-            Id = (int)x.id,
-            UserId = (int)x.user_id,
-            Balance = (decimal)x.balance,
-            Currency = Enum.Parse<Currency>(x.currency),
-            CreatedAt = (DateTime)x.created_at,
-        };
-    }
 
     public async Task<(bool, int?)> Create(Account data)
     {

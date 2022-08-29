@@ -1,6 +1,7 @@
 ﻿using Dapper;
 using Microsoft.Extensions.Caching.Distributed;
 using SimpleBankAPI.Core.Entities;
+using SimpleBankAPI.Infrastructure.Repositories.Mapper;
 using SimpleBankAPI.Infrastructure.Repositories.SqlDataAccess;
 using System.Data;
 
@@ -21,7 +22,7 @@ internal class UserRepository : IUserRepository
         var parameters = new DynamicParameters();
         parameters.Add("id", id);
         var resultDb = await _dbTransaction.Connection.QueryFirstOrDefaultAsync<object>(query, parameters);
-        return Map(resultDb);
+        return UserMapper.Map(resultDb);
     }
 
     public async Task<User?> ReadByName(string name)
@@ -30,44 +31,15 @@ internal class UserRepository : IUserRepository
         var parameters = new DynamicParameters();
         parameters.Add("username", name);
         var resultDb = await _dbTransaction.Connection.QueryFirstOrDefaultAsync<object>(query, parameters);
-        return Map(resultDb);
+        return UserMapper.Map(resultDb);
     }
     public async Task<IEnumerable<User>?> ReadAll()
     {
         var query = "SELECT * FROM users";
         var resultDb = await _dbTransaction.Connection.QueryAsync(query);
-        return Map(resultDb);
+        return UserMapper.Map(resultDb);
     }
-
-    private static IEnumerable<User>? Map(IEnumerable<dynamic> dataDb)
-    {
-        if (dataDb is null) return null;
-        IEnumerable<User> userList = dataDb.Select(x => new User
-        {
-            Id = (int)x.id,
-            UserName = (string)x.username,
-            Email = (string)x.email,
-            Password = (string)x.password,
-            FullName = (string)x.full_name,
-            CreatedAt = (DateTime)x.created_at,
-        });
-        return userList;
-    }
-
-    private static User? Map(dynamic x)
-    {
-        if (x is null) return null;
-        return new User
-        {
-            Id = (int)x.id,
-            UserName = (string)x.username,
-            Email = (string)x.email,
-            Password = (string)x.password,
-            FullName = (string)x.full_name,
-            CreatedAt = (DateTime)x.created_at,
-        };
-    }
-
+       
     public async Task<(bool, int?)> Create(User data)
     {
         var query = "INSERT INTO users (username, password, full_name, email)"

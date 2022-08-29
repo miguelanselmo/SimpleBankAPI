@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Caching.Distributed;
 using SimpleBankAPI.Core.Entities;
 using SimpleBankAPI.Core.Enums;
+using SimpleBankAPI.Infrastructure.Repositories.Mapper;
 using SimpleBankAPI.Infrastructure.Repositories.SqlDataAccess;
 using System.Data;
 using System.Text.Json;
@@ -24,7 +25,7 @@ internal class MovementRepository : IMovementRepository
         parameters.Add("account_id", accountId);
         parameters.Add("Id", id);
         var resultDb = await _dbTransaction.Connection.QueryAsync<object>(query, parameters);
-        return Map(resultDb).FirstOrDefault();
+        return MovementMapper.Map(resultDb).FirstOrDefault();
     }
 
     public async Task<IEnumerable<Movement>?> ReadByAccount(int accountId)
@@ -33,7 +34,7 @@ internal class MovementRepository : IMovementRepository
         var parameters = new DynamicParameters();
         parameters.Add("account_id", accountId);
         var resultDb = await _dbTransaction.Connection.QueryAsync<object>(query, parameters);
-        return Map(resultDb);
+        return MovementMapper.Map(resultDb);
     }
     /*
     public async Task<IEnumerable<Movement>?> ReadAll()
@@ -43,31 +44,7 @@ internal class MovementRepository : IMovementRepository
         return Map(resultDb);
     }
     */
-    private static IEnumerable<Movement>? Map(IEnumerable<dynamic> dataDb)
-    {
-        IEnumerable<Movement> MovementList = dataDb.Select(x => new Movement
-        {
-            Id = (int)x.id,
-            AccountId = (int)x.account_id,
-            Amount = (decimal)x.amount,
-            Balance = (decimal)x.balance,
-            CreatedAt = (DateTime)x.created_at,
-        });
-        return MovementList;
-    }
-
-    private static Movement? Map(dynamic x)
-    {
-        return new Movement
-        {
-            Id = (int)x.id,
-            AccountId = (int)x.account_id,
-            Amount = (decimal)x.amount,
-            Balance = (decimal)x.balance,
-            CreatedAt = (DateTime)x.created_at,
-        };
-    }
-
+    
     public async Task<(bool, int?)> Create(Movement data)
     {
         var query = "INSERT INTO movements (account_id, amount, balance)"

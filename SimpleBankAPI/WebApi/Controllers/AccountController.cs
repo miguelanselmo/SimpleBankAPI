@@ -17,15 +17,15 @@ public class AccountController : Controller
 {
     private readonly ILogger<AccountController> _logger;
     private readonly IAccountUseCase _useCase;
-    private readonly IUserUseCase _userUseCase;
+    private readonly ISessionUseCase _sessionUseCase;
     private readonly IAuthenticationProvider _provider;
 
 
-    public AccountController(ILogger<AccountController> logger, IAccountUseCase useCase, IUserUseCase userUseCase, IAuthenticationProvider provider)
+    public AccountController(ILogger<AccountController> logger, IAccountUseCase useCase, ISessionUseCase sessionUseCase, IAuthenticationProvider provider)
     {
         _logger = logger;
         _useCase = useCase;
-        _userUseCase = userUseCase;
+        _sessionUseCase = sessionUseCase;
         _provider = provider;
     }
 
@@ -41,10 +41,10 @@ public class AccountController : Controller
         {
             if (!Request.Headers.TryGetValue("Authorization", out StringValues authToken))
                 return BadRequest("Missing Authorization Header.");
-            var resultClaims = _provider.GetClaimSession(authToken);
+            var resultClaims = _provider.GetClaims(authToken);
             if (!resultClaims.Item1)
                 return BadRequest(resultClaims.Item2);
-            var resultSession = await _userUseCase.CheckSession(resultClaims.Item3);
+            var resultSession = await _sessionUseCase.CheckSession(resultClaims.Item3);
             if (!resultSession.Item1)
                 return Unauthorized(resultSession.Item2);
 
@@ -85,10 +85,10 @@ public class AccountController : Controller
         {
             if (!Request.Headers.TryGetValue("Authorization", out StringValues authToken))
                 return BadRequest("Missing Authorization Header.");
-            var resultClaims = _provider.GetClaimSession(authToken);
+            var resultClaims = _provider.GetClaims(authToken);
             if (!resultClaims.Item1)
                 return BadRequest(resultClaims.Item2);
-            var resultSession = await _userUseCase.CheckSession(resultClaims.Item3);
+            var resultSession = await _sessionUseCase.CheckSession(resultClaims.Item3);
             if (!resultSession.Item1)
                 return Unauthorized(resultSession.Item2);
 
@@ -120,10 +120,10 @@ public class AccountController : Controller
         {
             if (!Request.Headers.TryGetValue("Authorization", out StringValues authToken))
                 return BadRequest("Missing Authorization Header.");
-            var resultClaims = _provider.GetClaimSession(authToken);
+            var resultClaims = _provider.GetClaims(authToken);
             if (!resultClaims.Item1)
                 return BadRequest(resultClaims.Item2);
-            var resultSession = await _userUseCase.CheckSession(resultClaims.Item3);
+            var resultSession = await _sessionUseCase.CheckSession(resultClaims.Item3);
             if (!resultSession.Item1)
                 return Unauthorized(resultSession.Item2);
 

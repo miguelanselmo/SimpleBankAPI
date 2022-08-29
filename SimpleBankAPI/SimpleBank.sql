@@ -61,6 +61,8 @@ CREATE TABLE public.sessions (
 	user_id int NOT NULL,
 	active bool NOT NULL DEFAULT true,
 	created_at timestamptz NOT NULL DEFAULT now(),
+	refresk_token varchar,
+	refresk_token_expire_at timestamptz,
 	CONSTRAINT sessions_fkey FOREIGN KEY(user_id) REFERENCES users(id)
 );
 

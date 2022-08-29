@@ -3,6 +3,7 @@ using Microsoft.IdentityModel.Tokens;
 using SimpleBankAPI.Core.Entities;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace SimpleBankAPI.Infrastructure.Providers;
@@ -30,7 +31,7 @@ public class AuthenticationProvider : IAuthenticationProvider
 
     }
 
-    public (bool, string?, Session?) GetClaimSession(string authToken)
+    public (bool, string?, Session?) GetClaims(string authToken)
     {
         try
         {
@@ -75,20 +76,21 @@ public class AuthenticationProvider : IAuthenticationProvider
             Id = Guid.NewGuid()
         };
         session = GenerateAccessToken(session, user);
-        return session;// GenerateRefreshToken(session, user); //TODO: refresh token
+        session = GenerateRefreshToken(session);
+        return session;
     }
 
-    public Session RenewToken(Session session, User user)
+    public Session RenewToken(User user, Session session)
     {
-        session.TokenRefresh = session.TokenAccess;
-        session.TokenRefreshExpireAt = session.TokenRefreshExpireAt;
-        return GenerateAccessToken(session, user);
+        session = GenerateAccessToken(session, user);
+        //session = GenerateRefreshToken(session);
+        return session;
     }
 
-    private Session GenerateAccessToken(Session session, User user)
+    private static Session GenerateAccessToken(Session session, User user)
     {
-        DateTime expiredAt = DateTime.UtcNow.AddMinutes((double)_accessTokenDuration);
-        //Guid sessionId = Guid.NewGuid();
+        session.CreatedAt = DateTime.UtcNow;
+        session.TokenAccessExpireAt = DateTime.UtcNow.AddMinutes((double)_accessTokenDuration);
         var claims = new[]
         {
             new Claim(ClaimTypes.Name, user.UserName),
@@ -100,40 +102,25 @@ public class AuthenticationProvider : IAuthenticationProvider
             issuer: _issuer,
             audience: _audience,
             claims: claims,
-            expires: expiredAt,
-            notBefore: DateTime.UtcNow,
+            expires: session.TokenAccessExpireAt,
+            notBefore: session.CreatedAt,
             signingCredentials: new SigningCredentials(
                 new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_key)),
                 SecurityAlgorithms.HmacSha256)
         );
         session.TokenAccess = new JwtSecurityTokenHandler().WriteToken(token);
-        session.TokenAccessExpireAt = expiredAt;
         return session;
     }
-
-    private Session GenerateRefreshToken(Session session, User user)
+    
+    private static Session GenerateRefreshToken(Session session)
     {
-        DateTime expiredAt = DateTime.UtcNow.AddMinutes((double)_refreshTokenDuration);
-        //Guid sessionId = Guid.NewGuid();
-        var claims = new[]
+        var randomNumber = new byte[32];
+        using (var generator = new RNGCryptoServiceProvider())
         {
-            new Claim(ClaimTypes.Name, user.UserName),
-            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-            new Claim(ClaimTypes.Sid, session.Id.ToString())
-        };
-        var token = new JwtSecurityToken
-        (
-            issuer: _issuer,
-            audience: _audience,
-            claims: claims,
-            expires: expiredAt,
-            notBefore: DateTime.UtcNow,
-            signingCredentials: new SigningCredentials(
-                new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_key)),
-                SecurityAlgorithms.HmacSha256)
-        );
-        session.TokenRefresh = new JwtSecurityTokenHandler().WriteToken(token);
-        session.TokenRefreshExpireAt = expiredAt;
-        return session;
+            generator.GetBytes(randomNumber);
+            session.TokenRefresh = Convert.ToBase64String(randomNumber);
+            session.TokenRefreshExpireAt = DateTime.UtcNow.AddMinutes((double)_refreshTokenDuration);
+            return session;
+        }
     }
 }

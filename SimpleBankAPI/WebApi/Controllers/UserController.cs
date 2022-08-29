@@ -8,8 +8,6 @@ using Microsoft.Extensions.Primitives;
 using System.Net;
 using SimpleBankAPI.Infrastructure.Providers;
 
-// For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-
 namespace SimpleBankAPI.WebApi.Controllers;
 
 [Route("simplebankapi/v1/[controller]")]
@@ -18,12 +16,14 @@ public class UserController : Controller
 {
     private readonly ILogger<UserController> _logger;
     private readonly IUserUseCase _useCase;
+    private readonly ISessionUseCase _sessionUseCase;
     private readonly IAuthenticationProvider _provider;
 
-    public UserController(ILogger<UserController> logger, IUserUseCase useCase, IAuthenticationProvider provider)
+    public UserController(ILogger<UserController> logger, IUserUseCase useCase, ISessionUseCase sessionUseCase, IAuthenticationProvider provider)
     {
         _logger = logger;
         _useCase = useCase;
+        _sessionUseCase = sessionUseCase;
         _provider = provider;
     }
 
@@ -66,7 +66,7 @@ public class UserController : Controller
     }
 
     //[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-    [HttpPost("login", Name = "Login")]
+    [HttpPost("Login", Name = "Login")]
     [ProducesResponseType(typeof(loginResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(string), StatusCodes.Status401Unauthorized)]
@@ -80,7 +80,7 @@ public class UserController : Controller
                 UserName = request.UserName,
                 Password = request.Password
             };
-            var result = await _useCase.Login(account);
+            var result = await _sessionUseCase.Login(account);
             if (result.Item1)
             {
                 loginResponse response = new loginResponse
@@ -112,7 +112,7 @@ public class UserController : Controller
     }
 
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-    [HttpPost("logout", Name = "Logout")]
+    [HttpPost("Logout", Name = "Logout")]
     [ProducesResponseType(typeof(loginResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(string), StatusCodes.Status401Unauthorized)]
@@ -123,10 +123,10 @@ public class UserController : Controller
         {
             if (!Request.Headers.TryGetValue("Authorization", out StringValues authToken))
                 return BadRequest("Missing Authorization Header.");
-            var resultClaims = _provider.GetClaimSession(authToken);
+            var resultClaims = _provider.GetClaims(authToken);
             if (!resultClaims.Item1)
                 return BadRequest(resultClaims.Item2);
-            var result = await _useCase.Logout(resultClaims.Item3);
+            var result = await _sessionUseCase.Logout(resultClaims.Item3);
             if (result.Item1)
                 return Ok(result.Item3);
             else
@@ -139,51 +139,47 @@ public class UserController : Controller
         }
     }
     
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    //[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [HttpPost("RenewLogin", Name = "RenewLogin")]
     [ProducesResponseType(typeof(loginResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(string), StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<loginResponse>> RenewLogin()
+    public async Task<ActionResult<loginResponse>> RenewLogin([FromBody] renewloginRequest tokenRefresh)
     {
         try
         {
-            if (!Request.Headers.TryGetValue("Authorization", out StringValues refreshToken))
+            if (!Request.Headers.TryGetValue("Authorization", out StringValues authToken))
                 return BadRequest("Missing Authorization Header.");
-            var resultClaims = _provider.GetClaimSession(refreshToken);
-            /*
-             * Id = sessionId.Value,
-                UserId = userId.Value,
-                TokenAccess = resultAuth.Item2
-             */
+            var resultClaims = _provider.GetClaims(authToken);
             if (!resultClaims.Item1)
                 return BadRequest(resultClaims.Item2);
-            var resultSession = await _useCase.CheckSession(resultClaims.Item3);
+            var resultSession = await _sessionUseCase.CheckSession(resultClaims.Item3);
             if (!resultSession.Item1)
                 return Unauthorized(resultSession.Item2);
-
-            var resultRenewSession = await _useCase.RenewLogin(resultSession.Item3);
-            if (!resultRenewSession.Item1)
-                return Unauthorized(resultSession.Item2);
-
-            loginResponse response = new loginResponse
+            var result = await _sessionUseCase.RenewLogin(resultSession.Item3, tokenRefresh.RefreshToken);
+            if (result.Item1)
             {
-                AccessToken = resultRenewSession.Item4.TokenAccess,
-                AccessTokenExpiresAt = resultRenewSession.Item4.TokenAccessExpireAt,
-                RefreshToken = refreshToken,
-                RefreshTokenExpiresAt = resultRenewSession.Item4.TokenRefreshExpireAt,
-                SessionId = resultRenewSession.Item4.Id.ToString(),
-                User = new registerResponse
+                loginResponse response = new loginResponse
                 {
-                    UserId = resultRenewSession.Item3.Id,
-                    UserName = resultRenewSession.Item3.UserName,
-                    Email = resultRenewSession.Item3.Email,
-                    FullName = resultRenewSession.Item3.FullName,
-                    CreatedAt = resultRenewSession.Item3.CreatedAt
-                }
-            };
-            return Ok(response);
+                    AccessToken = result.Item4.TokenAccess,
+                    AccessTokenExpiresAt = result.Item4.TokenAccessExpireAt,
+                    RefreshToken = result.Item4.TokenRefresh,
+                    RefreshTokenExpiresAt = result.Item4.TokenRefreshExpireAt,
+                    SessionId = result.Item4.Id.ToString(),
+                    User = new registerResponse
+                    {
+                        UserId = result.Item3.Id,
+                        UserName = result.Item3.UserName,
+                        Email = result.Item3.Email,
+                        FullName = result.Item3.FullName,
+                        CreatedAt = result.Item3.CreatedAt
+                    }
+                };
+                return Ok(response);
+            }
+            else
+                return Unauthorized(result.Item2);
         }
         catch (Exception ex)
         {

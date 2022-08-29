@@ -49,6 +49,8 @@ internal class SessionRepository : ISessionRepository
             UserId = (int)x.user_id,
             Active = (bool)x.active,
             CreatedAt = (DateTime)x.created_at,
+            TokenRefresh = (string)x.refresk_token,
+            TokenRefreshExpireAt = (DateTime)x.refresk_token_expire_at,
         });
         return sessionList;
     }
@@ -62,16 +64,20 @@ internal class SessionRepository : ISessionRepository
             UserId = (int)x.user_id,
             Active = (bool)x.active,
             CreatedAt = (DateTime)x.created_at,
+            TokenRefresh = (string)x.refresk_token,
+            TokenRefreshExpireAt = (DateTime)x.refresk_token_expire_at,
         };
     }
 
     public async Task<bool> Create(Session data)
     {
-        var query = "INSERT INTO sessions (id, user_id)"
-            + " VALUES(@id, @user_id)";
+        var query = "INSERT INTO sessions (id, user_id, refresk_token, refresk_token_expire_at)"
+            + " VALUES(@id, @user_id, @refresk_token, @refresk_token_expire_at)";
         var parameters = new DynamicParameters();
         parameters.Add("id", data.Id.ToString());
         parameters.Add("user_id", data.UserId);
+        parameters.Add("refresk_token", data.TokenRefresh);
+        parameters.Add("refresk_token_expire_at", data.TokenRefreshExpireAt);
         var result = await _dbTransaction.Connection.ExecuteAsync(query, parameters, _dbTransaction);
         return result > 0;
     }

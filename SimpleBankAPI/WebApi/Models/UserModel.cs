@@ -52,3 +52,10 @@ public struct loginResponse
     [JsonPropertyNameAttribute("user")]
     public registerResponse User { get; set; }
 }
+
+public struct renewloginRequest
+{
+    [JsonPropertyNameAttribute("refresh_token")]
+    public string RefreshToken { get; set; }
+
+}

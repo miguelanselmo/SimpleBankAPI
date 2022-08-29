@@ -14,11 +14,19 @@ public class RegisterValidator : AbstractValidator<registerRequest>
     }
 }
 
-internal class LoginValidator : AbstractValidator<loginRequest>
+public class LoginValidator : AbstractValidator<loginRequest>
 {
     public LoginValidator()
     {
         RuleFor(x => x.UserName).MinimumLength(8).WithMessage("UserName is required (minimum length: 8).");
         RuleFor(x => x.Password).MinimumLength(8).WithMessage("UserName is required (minimum length: 8).");
+    }
+}
+
+public class RenewLoginValidator : AbstractValidator<renewloginRequest>
+{
+    public RenewLoginValidator()
+    {
+        RuleFor(x => x.RefreshToken).NotEmpty().WithMessage("Refresk token required.");
     }
 }

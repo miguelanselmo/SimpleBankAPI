@@ -36,6 +36,7 @@ builder.Services.AddTransient<IAccountRepository, AccountRepository>();
 builder.Services.AddTransient<ISessionRepository, SessionRepository>();
 builder.Services.AddTransient<IMovementRepository, MovementRepository>();
 
+builder.Services.AddScoped<ISessionUseCase, SessionUseCase>();
 builder.Services.AddScoped<IUserUseCase, UserUseCase>();
 builder.Services.AddScoped<IAccountUseCase, AccountUseCase>();
 builder.Services.AddScoped<ITransferUseCase, TransferUseCase>();
@@ -45,6 +46,8 @@ builder.Services.AddScoped<ITransferUseCase, TransferUseCase>();
 //builder.Services.AddScoped<IValidator<registerRequest>, RegisterValidator>();
 
 builder.Services.AddFluentValidation(x => x.RegisterValidatorsFromAssemblyContaining<RegisterValidator>());
+builder.Services.AddFluentValidation(x => x.RegisterValidatorsFromAssemblyContaining<LoginValidator>());
+builder.Services.AddFluentValidation(x => x.RegisterValidatorsFromAssemblyContaining<RenewLoginValidator>());
 builder.Services.AddFluentValidation(x => x.RegisterValidatorsFromAssemblyContaining<TransferValidator>());
 builder.Services.AddFluentValidation(x => x.RegisterValidatorsFromAssemblyContaining<CreateAccountValidator>());
 

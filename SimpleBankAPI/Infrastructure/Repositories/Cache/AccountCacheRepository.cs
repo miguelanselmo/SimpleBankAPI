@@ -1,8 +1,7 @@
 ﻿using Dapper;
 using Microsoft.Extensions.Caching.Distributed;
 using SimpleBankAPI.Core.Entities;
-using SimpleBankAPI.Core.Enums;
-using SimpleBankAPI.Infrastructure.Repositories.SqlDataAccess;
+using SimpleBankAPI.Infrastructure.Repositories.Mapper;
 using System.Data;
 
 namespace SimpleBankAPI.Infrastructure.Repositories;
@@ -29,7 +28,7 @@ internal class AccountCacheRepository : IAccountRepository
             parameters.Add("id", id);
             parameters.Add("user_id", userId);
             var resultDb = await _dbTransaction.Connection.QueryFirstOrDefaultAsync<object>(query, parameters, _dbTransaction);
-            var data = Map(resultDb);
+            var data = AccountMapper.Map(resultDb);
             await _cache.SetRecordAsync(_caheKey, data);
             return data;
         }
@@ -46,7 +45,7 @@ internal class AccountCacheRepository : IAccountRepository
             var parameters = new DynamicParameters();
             parameters.Add("id", id);
             var resultDb = await _dbTransaction.Connection.QueryFirstOrDefaultAsync<object>(query, parameters, _dbTransaction);
-            var data = Map(resultDb);
+            var data = AccountMapper.Map(resultDb);
             await _cache.SetRecordAsync(_caheKey + id, data);
             return data;
         }
@@ -63,8 +62,8 @@ internal class AccountCacheRepository : IAccountRepository
             var parameters = new DynamicParameters();
             parameters.Add("user_id", userId);
             var resultDb = await _dbTransaction.Connection.QueryAsync<object>(query, parameters, _dbTransaction);
-            var data = Map(resultDb);
-            await _cache.SetRecordAsync(_caheKey+ userId, data);
+            var data = AccountMapper.Map(resultDb);
+            await _cache.SetRecordAsync(_caheKey + userId, data);
             return data;
         }
         else
@@ -85,32 +84,6 @@ internal class AccountCacheRepository : IAccountRepository
             return resultCache;
     }
     */
-    private static IEnumerable<Account>? Map(IEnumerable<dynamic> dataDb)
-    {
-        if (dataDb is null) return null;
-        return dataDb.Select(x => new Account
-        {
-            Id = (int)x.id,
-            UserId = (int)x.user_id,
-            Balance = (decimal)x.balance,
-            Currency = Enum.Parse<Currency>(x.currency),
-            CreatedAt = (DateTime)x.created_at
-        });
-    }
-
-    private static Account? Map(dynamic x)
-    {
-        if (x is null) return null;
-        return new Account
-        {
-            Id = (int)x.id,
-            UserId = (int)x.user_id,
-            Balance = (decimal)x.balance,
-            Currency = Enum.Parse<Currency>(x.currency),
-            CreatedAt = (DateTime)x.created_at,
-        };
-    }
-
     public async Task<(bool, int?)> Create(Account data)
     {
         var query = "INSERT INTO accounts (user_id, balance, currency)"
@@ -131,7 +104,7 @@ internal class AccountCacheRepository : IAccountRepository
         parameters.Add("id", data.Id);
         parameters.Add("balance", data.Balance);
         var result = await _dbTransaction.Connection.ExecuteAsync(query, parameters, _dbTransaction);
-        await _cache.RemoveAsync(_caheKey+data.Id);
+        await _cache.RemoveAsync(_caheKey + data.Id);
         await _cache.SetRecordAsync(_caheKey + ":" + data.Id, data);
         return result > 0;
     }

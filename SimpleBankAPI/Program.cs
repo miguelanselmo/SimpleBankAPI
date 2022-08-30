@@ -3,15 +3,13 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Npgsql;
+using Serilog;
+using SimpleBankAPI.Core.Usecases;
 using SimpleBankAPI.Infrastructure.Providers;
 using SimpleBankAPI.Infrastructure.Repositories;
-using SimpleBankAPI.Core.Usecases;
+using SimpleBankAPI.WebApi.Validators;
 using System.Data;
 using System.Text;
-using SimpleBankAPI.WebApi.Models;
-using Serilog;
-using FluentValidation;
-using SimpleBankAPI.WebApi.Validators;
 
 var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
@@ -28,7 +26,7 @@ builder.Services.AddScoped<IDbConnection>((s) => new NpgsqlConnection(builder.Co
 builder.Services.AddScoped<IDbTransaction>(s =>
 {
     NpgsqlConnection connection = (NpgsqlConnection)s.GetRequiredService<IDbConnection>();
-    connection.Open();    
+    connection.Open();
     return connection.BeginTransaction();
 });
 builder.Services.AddTransient<IUserRepository, UserRepository>();

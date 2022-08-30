@@ -1,12 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Primitives;
 using SimpleBankAPI.Core.Entities;
-using SimpleBankAPI.Infrastructure.Providers;
-using SimpleBankAPI.Infrastructure.Repositories;
 using SimpleBankAPI.Core.Usecases;
+using SimpleBankAPI.Infrastructure.Providers;
 using SimpleBankAPI.WebApi.Models;
 
 namespace SimpleBankAPI.WebApi.Controllers;
@@ -19,8 +17,8 @@ public class TransferController : Controller
     private readonly ITransferUseCase _useCase;
     private readonly ISessionUseCase _sessionUseCase;
     private readonly IAuthenticationProvider _provider;
-    
-        public TransferController(ILogger<TransferController> logger, ITransferUseCase useCase, ISessionUseCase sessionUseCase, IAuthenticationProvider provider)
+
+    public TransferController(ILogger<TransferController> logger, ITransferUseCase useCase, ISessionUseCase sessionUseCase, IAuthenticationProvider provider)
     {
         _logger = logger;
         _useCase = useCase;
@@ -63,5 +61,5 @@ public class TransferController : Controller
             _logger.LogError(ex.Message, ex.InnerException);
             return Problem(ex.Message);
         }
-   }
+    }
 }

@@ -1,8 +1,6 @@
 ﻿using Dapper;
-using Microsoft.Extensions.Caching.Distributed;
 using SimpleBankAPI.Core.Entities;
 using SimpleBankAPI.Infrastructure.Repositories.Mapper;
-using SimpleBankAPI.Infrastructure.Repositories.SqlDataAccess;
 using System.Data;
 
 namespace SimpleBankAPI.Infrastructure.Repositories;
@@ -39,7 +37,7 @@ internal class UserRepository : IUserRepository
         var resultDb = await _dbTransaction.Connection.QueryAsync(query);
         return UserMapper.Map(resultDb);
     }
-       
+
     public async Task<(bool, int?)> Create(User data)
     {
         var query = "INSERT INTO users (username, password, full_name, email)"

@@ -3,7 +3,7 @@ using SimpleBankAPI.Infrastructure.Repositories;
 
 namespace SimpleBankAPI.Core.Usecases;
 
-internal class AccountUseCase : IAccountUseCase
+public class AccountUseCase : IAccountUseCase
 {
     private readonly ILogger<AccountUseCase> _logger;
     private readonly IUnitOfWork _unitOfWork;
@@ -14,7 +14,7 @@ internal class AccountUseCase : IAccountUseCase
         _unitOfWork = unitOfWork;
         //_userUseCase = userUseCase;
     }
-    
+
     public async Task<(bool, string?, Account?)> CreateAccount(Account account)
     {
         bool commit = false;
@@ -44,7 +44,7 @@ internal class AccountUseCase : IAccountUseCase
         else
             return (false, "Accounts not found.", null);
     }
-    
+
     public async Task<(bool, string?, Account, IEnumerable<Movement>)> GetAccountMovements(int userId, int id)
     {
         var result = await _unitOfWork.AccountRepository.ReadById(userId, id);

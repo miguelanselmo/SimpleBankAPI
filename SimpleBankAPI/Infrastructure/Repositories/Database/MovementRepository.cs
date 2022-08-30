@@ -1,11 +1,7 @@
 ﻿using Dapper;
-using Microsoft.Extensions.Caching.Distributed;
 using SimpleBankAPI.Core.Entities;
-using SimpleBankAPI.Core.Enums;
 using SimpleBankAPI.Infrastructure.Repositories.Mapper;
-using SimpleBankAPI.Infrastructure.Repositories.SqlDataAccess;
 using System.Data;
-using System.Text.Json;
 
 namespace SimpleBankAPI.Infrastructure.Repositories;
 
@@ -44,7 +40,7 @@ internal class MovementRepository : IMovementRepository
         return Map(resultDb);
     }
     */
-    
+
     public async Task<(bool, int?)> Create(Movement data)
     {
         var query = "INSERT INTO movements (account_id, amount, balance)"

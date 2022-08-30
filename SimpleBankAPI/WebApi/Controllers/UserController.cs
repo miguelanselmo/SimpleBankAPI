@@ -1,12 +1,11 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Primitives;
 using SimpleBankAPI.Core.Entities;
 using SimpleBankAPI.Core.Usecases;
-using SimpleBankAPI.WebApi.Models;
-using Microsoft.Extensions.Primitives;
-using System.Net;
 using SimpleBankAPI.Infrastructure.Providers;
+using SimpleBankAPI.WebApi.Models;
 
 namespace SimpleBankAPI.WebApi.Controllers;
 
@@ -138,7 +137,7 @@ public class UserController : Controller
             return Problem(ex.Message);
         }
     }
-    
+
     //[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [HttpPost("RenewLogin", Name = "RenewLogin")]
     [ProducesResponseType(typeof(loginResponse), StatusCodes.Status200OK)]

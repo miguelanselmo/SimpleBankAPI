@@ -1,9 +1,6 @@
 ﻿using Dapper;
-using Microsoft.Extensions.Caching.Distributed;
 using SimpleBankAPI.Core.Entities;
-using SimpleBankAPI.Core.Enums;
 using SimpleBankAPI.Infrastructure.Repositories.Mapper;
-using SimpleBankAPI.Infrastructure.Repositories.SqlDataAccess;
 using System.Data;
 
 namespace SimpleBankAPI.Infrastructure.Repositories;
@@ -11,7 +8,7 @@ namespace SimpleBankAPI.Infrastructure.Repositories;
 internal class AccountRepository : IAccountRepository
 {
     private readonly IDbTransaction _dbTransaction;
-    
+
     public AccountRepository(IDbTransaction dbTransaction)
     {
         _dbTransaction = dbTransaction;

@@ -1,15 +1,10 @@
-﻿using Microsoft.IdentityModel.Tokens;
-using SimpleBankAPI.Core.Entities;
+﻿using SimpleBankAPI.Core.Entities;
 using SimpleBankAPI.Infrastructure.Crypto;
-using SimpleBankAPI.Infrastructure.Providers;
 using SimpleBankAPI.Infrastructure.Repositories;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
 
 namespace SimpleBankAPI.Core.Usecases;
 
-internal class UserUseCase : IUserUseCase
+public class UserUseCase : IUserUseCase
 {
     private readonly ILogger<UserUseCase> _logger;
     private readonly IUnitOfWork _unitOfWork;
@@ -20,8 +15,8 @@ internal class UserUseCase : IUserUseCase
         _logger = logger;
         _unitOfWork = unitOfWork;
     }
-    
-    public async Task<(bool,string?, User?)> CreateUser(User user)
+
+    public async Task<(bool, string?, User?)> CreateUser(User user)
     {
         bool commit = false;
         try

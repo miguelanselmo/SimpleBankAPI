@@ -1,15 +1,11 @@
-﻿using Microsoft.IdentityModel.Tokens;
-using SimpleBankAPI.Core.Entities;
+﻿using SimpleBankAPI.Core.Entities;
 using SimpleBankAPI.Infrastructure.Crypto;
 using SimpleBankAPI.Infrastructure.Providers;
 using SimpleBankAPI.Infrastructure.Repositories;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
 
 namespace SimpleBankAPI.Core.Usecases;
 
-internal class SessionUseCase : ISessionUseCase
+public class SessionUseCase : ISessionUseCase
 {
     private readonly ILogger<SessionUseCase> _logger;
     private readonly IAuthenticationProvider _provider;
@@ -22,8 +18,8 @@ internal class SessionUseCase : ISessionUseCase
         _provider = provider;
         _unitOfWork = unitOfWork;
     }
-   
-    public async Task<(bool,string?,User?,Session?)> Login(User user)
+
+    public async Task<(bool, string?, User?, Session?)> Login(User user)
     {
         bool commit = false;
         try
@@ -51,7 +47,7 @@ internal class SessionUseCase : ISessionUseCase
             if (commit) _unitOfWork.Commit(); else _unitOfWork.Rollback();
         }
     }
-    
+
     public async Task<(bool, string?, User?, Session?)> RenewLogin(Session session, string refreshToken)
     {
         bool commit = false;
@@ -60,23 +56,23 @@ internal class SessionUseCase : ISessionUseCase
             //var sessionDb = await _unitOfWork.SessionRepository.ReadById(session.Id);
             //if (sessionDb is not null)
             //{
-                //if (sessionDb.Active)
-                //{
-                    if (session.TokenRefresh == refreshToken && session.TokenRefreshExpireAt > DateTime.UtcNow)
-                    {
-                        var userDb = await _unitOfWork.UserRepository.ReadById(session.UserId);
-                        if (userDb is not null)
-                        {
-                            session = _provider.RenewToken(userDb, session);
-                            return (true, null, userDb, session);
-                        }
-                        else
-                            return (false, "User not found", null, null);
-                    }
-                        return (false, "Token refresh invalid or expired", null, null);
-                //}
-                //else
-                //    return (false, "Session already closed", null, null);
+            //if (sessionDb.Active)
+            //{
+            if (session.TokenRefresh == refreshToken && session.TokenRefreshExpireAt > DateTime.UtcNow)
+            {
+                var userDb = await _unitOfWork.UserRepository.ReadById(session.UserId);
+                if (userDb is not null)
+                {
+                    session = _provider.RenewToken(userDb, session);
+                    return (true, null, userDb, session);
+                }
+                else
+                    return (false, "User not found", null, null);
+            }
+            return (false, "Token refresh invalid or expired", null, null);
+            //}
+            //else
+            //    return (false, "Session already closed", null, null);
             //}
             //else
             //    return (false, "Session not found", null, null);
@@ -85,7 +81,7 @@ internal class SessionUseCase : ISessionUseCase
         {
         }
     }
-    
+
     public async Task<(bool, string?, Session?)> Logout(Session session)
     {
         bool commit = false;
@@ -106,7 +102,7 @@ internal class SessionUseCase : ISessionUseCase
             }
             else
                 return (false, "Session not found", null);
-        }        
+        }
         finally
         {
             if (commit) _unitOfWork.Commit(); else _unitOfWork.Rollback();

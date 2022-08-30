@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace SimpleBankAPI.Core.Entities;
+﻿namespace SimpleBankAPI.Core.Entities;
 public class Session
 {
     public string TokenAccess { get; set; }
@@ -10,5 +8,5 @@ public class Session
     public Guid Id { get; set; }
     public int UserId { get; set; }
     public DateTime CreatedAt { get; set; }
-    public bool Active { get; set; }   
+    public bool Active { get; set; }
 }

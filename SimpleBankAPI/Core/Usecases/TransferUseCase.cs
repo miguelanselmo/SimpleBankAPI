@@ -1,12 +1,9 @@
-﻿using Microsoft.IdentityModel.Tokens;
-using SimpleBankAPI.Core.Entities;
+﻿using SimpleBankAPI.Core.Entities;
 using SimpleBankAPI.Infrastructure.Repositories;
-using System.IdentityModel.Tokens.Jwt;
-using System.Text;
 
 namespace SimpleBankAPI.Core.Usecases;
 
-internal class TransferUseCase : ITransferUseCase
+public class TransferUseCase : ITransferUseCase
 {
     private readonly ILogger<TransferUseCase> _logger;
     private readonly IUnitOfWork _unitOfWork;
@@ -24,7 +21,7 @@ internal class TransferUseCase : ITransferUseCase
         {
             _unitOfWork.Begin();
             if (transfer.ToAccountId == transfer.FromAccountId)
-            return (false, "The accounts are the same.", null);
+                return (false, "The accounts are the same.", null);
             var resultFrom = await _unitOfWork.AccountRepository.ReadById(transfer.UserId, transfer.FromAccountId);
             if (resultFrom is null)
                 return (false, "Account not found.", null);
@@ -67,7 +64,7 @@ internal class TransferUseCase : ITransferUseCase
             commit = resultAcc;
             if (!resultAcc)
                 return (false, "Transfer error.", null);
-            
+
             resultAcc = await _unitOfWork.AccountRepository.Update(
                 new Account
                 {
@@ -94,6 +91,6 @@ internal class TransferUseCase : ITransferUseCase
         {
             if (commit) _unitOfWork.Commit(); else _unitOfWork.Rollback();
         }
-        
+
     }
 }

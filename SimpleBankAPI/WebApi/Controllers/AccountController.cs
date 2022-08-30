@@ -4,10 +4,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Primitives;
 using SimpleBankAPI.Core.Entities;
 using SimpleBankAPI.Core.Enums;
-using SimpleBankAPI.Infrastructure.Providers;
 using SimpleBankAPI.Core.Usecases;
+using SimpleBankAPI.Infrastructure.Providers;
 using SimpleBankAPI.WebApi.Models;
-using SimpleBankAPI.WebApi.Controllers;
 
 namespace SimpleBankAPI.Controllers;
 

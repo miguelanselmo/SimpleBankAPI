@@ -1,5 +1,4 @@
 ﻿using Microsoft.Extensions.Caching.Distributed;
-using SimpleBankAPI.Infrastructure.Repositories.SqlDataAccess;
 using System.Data;
 
 namespace SimpleBankAPI.Infrastructure.Repositories;
@@ -51,7 +50,7 @@ public class UnitOfWork : IUnitOfWork, IDisposable
         {
             return _dbTransaction.Connection.BeginTransaction();
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
             return _dbTransaction;
         }
@@ -72,7 +71,7 @@ public class UnitOfWork : IUnitOfWork, IDisposable
             _dbTransaction.Dispose();
         }
         catch (Exception ex)
-        {            
+        {
         }
     }
 

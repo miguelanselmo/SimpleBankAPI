@@ -6,7 +6,7 @@ namespace SimpleBankAPI.Infrastructure.Repositories.SqlDataAccess;
 public sealed class DbSession : IDbSession, IDisposable
 {
     private readonly IConfiguration _config;
-    
+
     private Guid _id;
     public System.Data.IDbConnection Connection { get; }
     public IDbTransaction Transaction { get; set; }

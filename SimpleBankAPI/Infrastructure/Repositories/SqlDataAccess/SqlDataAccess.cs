@@ -1,7 +1,6 @@
 ﻿using Dapper;
 using Npgsql;
 using System.Data;
-using System.Data.SqlClient;
 
 namespace SimpleBankAPI.Infrastructure.Repositories.SqlDataAccess;
 
@@ -40,6 +39,6 @@ public class SqlDataAccess : ISqlDataAccess
         return await connection.ExecuteAsync(storedProcedure, parameters,
             commandType: CommandType.StoredProcedure);
     }
-    
+
 }
 

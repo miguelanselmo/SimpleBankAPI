@@ -1,7 +1,7 @@
 ﻿using Dapper;
 using Microsoft.Extensions.Caching.Distributed;
 using SimpleBankAPI.Core.Entities;
-using SimpleBankAPI.Infrastructure.Repositories.SqlDataAccess;
+using SimpleBankAPI.Infrastructure.Repositories.Mapper;
 using System.Data;
 
 namespace SimpleBankAPI.Infrastructure.Repositories;
@@ -27,7 +27,7 @@ internal class SessionCacheRepository : ISessionRepository
             var parameters = new DynamicParameters();
             parameters.Add("id", id.ToString());
             var resultDb = await _dbTransaction.Connection.QueryFirstOrDefaultAsync<object>(query, parameters);
-            return Map(resultDb);
+            return SessionMapper.Map(resultDb);
         }
         else
             return resultCache;
@@ -42,7 +42,7 @@ internal class SessionCacheRepository : ISessionRepository
             var parameters = new DynamicParameters();
             parameters.Add("user_id", userId);
             var resultDb = await _dbTransaction.Connection.QueryAsync<object>(query, parameters);
-            return Map(resultDb);
+            return SessionMapper.Map(resultDb);
         }
         else
             return resultCache.Where(x => x.UserId.Equals(userId));
@@ -61,35 +61,6 @@ internal class SessionCacheRepository : ISessionRepository
             return resultCache;
     }
     */
-    private static IEnumerable<Session>? Map(IEnumerable<dynamic> dataDb)
-    {
-        if (dataDb is null) return null;
-        IEnumerable<Session> sessionList = dataDb.Select(x => new Session
-        {
-            Id = Guid.Parse(x.id),
-            UserId = (int)x.user_id,
-            Active = (bool)x.active,
-            CreatedAt = (DateTime)x.created_at,
-            TokenRefresh = (string)x.refresk_token,
-            TokenRefreshExpireAt = (DateTime)x.refresk_token_expire_at,
-        });
-        return sessionList;
-    }
-
-    private static Session? Map(dynamic x)
-    {
-        if (x is null) return null;
-        return new Session
-        {
-            Id = Guid.Parse(x.id),
-            UserId = (int)x.user_id,
-            Active = (bool)x.active,
-            CreatedAt = (DateTime)x.created_at,
-            TokenRefresh = (string)x.refresk_token,
-            TokenRefreshExpireAt = (DateTime)x.refresk_token_expire_at,
-        };
-    }
-
     public async Task<bool> Create(Session data)
     {
         var query = "INSERT INTO sessions (id, user_id)"

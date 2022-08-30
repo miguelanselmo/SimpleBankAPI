@@ -1,8 +1,6 @@
 ﻿using Dapper;
-using Microsoft.Extensions.Caching.Distributed;
 using SimpleBankAPI.Core.Entities;
 using SimpleBankAPI.Infrastructure.Repositories.Mapper;
-using SimpleBankAPI.Infrastructure.Repositories.SqlDataAccess;
 using System.Data;
 
 namespace SimpleBankAPI.Infrastructure.Repositories;

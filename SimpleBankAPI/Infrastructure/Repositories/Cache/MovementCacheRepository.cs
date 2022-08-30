@@ -1,10 +1,8 @@
 ﻿using Dapper;
 using Microsoft.Extensions.Caching.Distributed;
 using SimpleBankAPI.Core.Entities;
-using SimpleBankAPI.Core.Enums;
-using SimpleBankAPI.Infrastructure.Repositories.SqlDataAccess;
+using SimpleBankAPI.Infrastructure.Repositories.Mapper;
 using System.Data;
-using System.Text.Json;
 
 namespace SimpleBankAPI.Infrastructure.Repositories;
 
@@ -30,7 +28,7 @@ internal class MovementCacheRepository : IMovementRepository
             parameters.Add("account_id", accountId);
             parameters.Add("Id", id);
             var resultDb = await _dbTransaction.Connection.QueryFirstOrDefaultAsync<object>(query, parameters);
-            return Map(resultDb);
+            return MovementMapper.Map(resultDb);
         }
         else
             return resultCache;
@@ -45,7 +43,7 @@ internal class MovementCacheRepository : IMovementRepository
             var parameters = new DynamicParameters();
             parameters.Add("account_id", accountId);
             var resultDb = await _dbTransaction.Connection.QueryAsync<object>(query, parameters);
-            return Map(resultDb);
+            return MovementMapper.Map(resultDb);
         }
         else
             return resultCache.Where(x => x.AccountId.Equals(accountId));
@@ -65,30 +63,6 @@ internal class MovementCacheRepository : IMovementRepository
             return resultCache;
     }
     */
-    private static IEnumerable<Movement>? Map(IEnumerable<dynamic> dataDb)
-    {
-        IEnumerable<Movement> MovementList = dataDb.Select(x => new Movement
-        {
-            Id = (int)x.id,
-            AccountId = (int)x.account_id,
-            Amount = (decimal)x.amount,
-            Balance = (decimal)x.balance,
-            CreatedAt = (DateTime)x.created_at,
-        });
-        return MovementList;
-    }
-
-    private static Movement? Map(dynamic x)
-    {
-        return new Movement
-        {
-            Id = (int)x.id,
-            AccountId = (int)x.account_id,
-            Amount = (decimal)x.amount,
-            Balance = (decimal)x.balance,
-            CreatedAt = (DateTime)x.created_at,
-        };
-    }
 
     public async Task<(bool, int?)> Create(Movement data)
     {

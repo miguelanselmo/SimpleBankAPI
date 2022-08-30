@@ -111,7 +111,7 @@ public class AuthenticationProvider : IAuthenticationProvider
         session.TokenAccess = new JwtSecurityTokenHandler().WriteToken(token);
         return session;
     }
-    
+
     private static Session GenerateRefreshToken(Session session)
     {
         var randomNumber = new byte[32];

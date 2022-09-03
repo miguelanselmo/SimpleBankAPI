@@ -3,7 +3,7 @@ using SimpleBankAPI.Core.Entities;
 using SimpleBankAPI.Infrastructure.Repositories.Mapper;
 using System.Data;
 
-namespace SimpleBankAPI.Infrastructure.Repositories;
+namespace SimpleBankAPI.Infrastructure.Repositories.Database;
 
 internal class SessionRepository : ISessionRepository
 {
@@ -22,7 +22,7 @@ internal class SessionRepository : ISessionRepository
         var resultDb = await _dbTransaction.Connection.QueryFirstOrDefaultAsync<object>(query, parameters);
         return SessionMapper.Map(resultDb);
     }
-
+/*
     public async Task<IEnumerable<Session>?> ReadByUser(int userId)
     {
         var query = "SELECT * FROM sessions WHERE user_id=@user_id";

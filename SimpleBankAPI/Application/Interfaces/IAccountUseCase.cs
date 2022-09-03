@@ -1,6 +1,6 @@
 ﻿using SimpleBankAPI.Core.Entities;
 
-namespace SimpleBankAPI.Core.Usecases;
+namespace SimpleBankAPI.Application.Interfaces;
 
 public interface IAccountUseCase
 {

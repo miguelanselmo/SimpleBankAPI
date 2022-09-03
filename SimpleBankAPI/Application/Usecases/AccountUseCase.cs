@@ -1,18 +1,18 @@
-﻿using SimpleBankAPI.Core.Entities;
+﻿using SimpleBankAPI.Application.Interfaces;
+using SimpleBankAPI.Core.Entities;
 using SimpleBankAPI.Infrastructure.Repositories;
 
-namespace SimpleBankAPI.Core.Usecases;
+namespace SimpleBankAPI.Application.Usecases;
 
 public class AccountUseCase : IAccountUseCase
 {
     private readonly ILogger<AccountUseCase> _logger;
     private readonly IUnitOfWork _unitOfWork;
-    //private readonly IUserUseCase _userUseCase;
-    public AccountUseCase(ILogger<AccountUseCase> logger, IUnitOfWork unitOfWork/*, IUserUseCase userUseCase*/)
+
+    public AccountUseCase(ILogger<AccountUseCase> logger, IUnitOfWork unitOfWork)
     {
         _logger = logger;
         _unitOfWork = unitOfWork;
-        //_userUseCase = userUseCase;
     }
 
     public async Task<(bool, string?, Account?)> CreateAccount(Account account)

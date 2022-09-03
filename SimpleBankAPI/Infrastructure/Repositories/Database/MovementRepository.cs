@@ -3,7 +3,7 @@ using SimpleBankAPI.Core.Entities;
 using SimpleBankAPI.Infrastructure.Repositories.Mapper;
 using System.Data;
 
-namespace SimpleBankAPI.Infrastructure.Repositories;
+namespace SimpleBankAPI.Infrastructure.Repositories.Database;
 
 internal class MovementRepository : IMovementRepository
 {

@@ -3,9 +3,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Primitives;
 using SimpleBankAPI.Core.Entities;
-using SimpleBankAPI.Core.Usecases;
 using SimpleBankAPI.Infrastructure.Providers;
 using SimpleBankAPI.WebApi.Models;
+using SimpleBankAPI.Application.Interfaces;
 
 namespace SimpleBankAPI.WebApi.Controllers;
 

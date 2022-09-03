@@ -4,11 +4,11 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Primitives;
 using SimpleBankAPI.Core.Entities;
 using SimpleBankAPI.Core.Enums;
-using SimpleBankAPI.Core.Usecases;
 using SimpleBankAPI.Infrastructure.Providers;
 using SimpleBankAPI.WebApi.Models;
+using SimpleBankAPI.Application.Interfaces;
 
-namespace SimpleBankAPI.Controllers;
+namespace SimpleBankAPI.WebApi.Controllers;
 
 [Route("simplebankapi/v1/[controller]")]
 [ApiController]
@@ -38,9 +38,7 @@ public class AccountController : Controller
     {
         try
         {
-            if (!Request.Headers.TryGetValue("Authorization", out StringValues authToken))
-                return BadRequest("Missing Authorization Header.");
-            var resultClaims = _provider.GetClaims(authToken);
+            var resultClaims = _provider.GetClaims(Request.Headers.Authorization);
             if (!resultClaims.Item1)
                 return BadRequest(resultClaims.Item2);
             var resultSession = await _sessionUseCase.CheckSession(resultClaims.Item3);
@@ -82,9 +80,7 @@ public class AccountController : Controller
     {
         try
         {
-            if (!Request.Headers.TryGetValue("Authorization", out StringValues authToken))
-                return BadRequest("Missing Authorization Header.");
-            var resultClaims = _provider.GetClaims(authToken);
+            var resultClaims = _provider.GetClaims(Request.Headers.Authorization);
             if (!resultClaims.Item1)
                 return BadRequest(resultClaims.Item2);
             var resultSession = await _sessionUseCase.CheckSession(resultClaims.Item3);
@@ -117,9 +113,7 @@ public class AccountController : Controller
     {
         try
         {
-            if (!Request.Headers.TryGetValue("Authorization", out StringValues authToken))
-                return BadRequest("Missing Authorization Header.");
-            var resultClaims = _provider.GetClaims(authToken);
+            var resultClaims = _provider.GetClaims(Request.Headers.Authorization);
             if (!resultClaims.Item1)
                 return BadRequest(resultClaims.Item2);
             var resultSession = await _sessionUseCase.CheckSession(resultClaims.Item3);

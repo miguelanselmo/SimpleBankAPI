@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.Caching.Distributed;
 using System.Text.Json;
 
-namespace SimpleBankAPI.Infrastructure.Repositories;
+namespace SimpleBankAPI.Infrastructure.Repositories.Cache;
 
 public static class DistributedCacheExtensions
 {
@@ -26,7 +26,7 @@ public static class DistributedCacheExtensions
 
         if (jsonData is null)
         {
-            return default(T);
+            return default;
         }
 
         return JsonSerializer.Deserialize<T>(jsonData);

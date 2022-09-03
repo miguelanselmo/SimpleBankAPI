@@ -1,14 +1,14 @@
-﻿using SimpleBankAPI.Core.Entities;
+﻿using SimpleBankAPI.Application.Interfaces;
+using SimpleBankAPI.Core.Entities;
 using SimpleBankAPI.Infrastructure.Crypto;
 using SimpleBankAPI.Infrastructure.Repositories;
 
-namespace SimpleBankAPI.Core.Usecases;
+namespace SimpleBankAPI.Application.Usecases;
 
 public class UserUseCase : IUserUseCase
 {
     private readonly ILogger<UserUseCase> _logger;
     private readonly IUnitOfWork _unitOfWork;
-
 
     public UserUseCase(ILogger<UserUseCase> logger, IUnitOfWork unitOfWork)
     {

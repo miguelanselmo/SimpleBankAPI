@@ -38,8 +38,4 @@
     <PackageReference Include="System.Text.Json" Version="6.0.5" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Application\Interfaces\" />
-  </ItemGroup>
-
 </Project>

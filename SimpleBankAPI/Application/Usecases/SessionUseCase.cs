@@ -1,16 +1,16 @@
-﻿using SimpleBankAPI.Core.Entities;
+﻿using SimpleBankAPI.Application.Interfaces;
+using SimpleBankAPI.Core.Entities;
 using SimpleBankAPI.Infrastructure.Crypto;
 using SimpleBankAPI.Infrastructure.Providers;
 using SimpleBankAPI.Infrastructure.Repositories;
 
-namespace SimpleBankAPI.Core.Usecases;
+namespace SimpleBankAPI.Application.Usecases;
 
 public class SessionUseCase : ISessionUseCase
 {
     private readonly ILogger<SessionUseCase> _logger;
     private readonly IAuthenticationProvider _provider;
     private readonly IUnitOfWork _unitOfWork;
-
 
     public SessionUseCase(ILogger<SessionUseCase> logger, IAuthenticationProvider provider, IUnitOfWork unitOfWork)
     {

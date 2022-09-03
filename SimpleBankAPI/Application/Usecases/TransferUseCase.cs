@@ -1,7 +1,8 @@
-﻿using SimpleBankAPI.Core.Entities;
+﻿using SimpleBankAPI.Application.Interfaces;
+using SimpleBankAPI.Core.Entities;
 using SimpleBankAPI.Infrastructure.Repositories;
 
-namespace SimpleBankAPI.Core.Usecases;
+namespace SimpleBankAPI.Application.Usecases;
 
 public class TransferUseCase : ITransferUseCase
 {

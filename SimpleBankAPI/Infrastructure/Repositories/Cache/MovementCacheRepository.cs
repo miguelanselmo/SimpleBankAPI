@@ -4,110 +4,57 @@ using SimpleBankAPI.Core.Entities;
 using SimpleBankAPI.Infrastructure.Repositories.Mapper;
 using System.Data;
 
-namespace SimpleBankAPI.Infrastructure.Repositories;
+namespace SimpleBankAPI.Infrastructure.Repositories.Cache;
 
 internal class MovementCacheRepository : IMovementRepository
 {
-    private readonly IDbTransaction _dbTransaction;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly IDistributedCache _cache;
     private const string _caheKey = "Movement";
 
-    public MovementCacheRepository(IDbTransaction dbTransaction, IDistributedCache cache)
+    public MovementCacheRepository(IUnitOfWork unitOfWork, IDistributedCache cache)
     {
-        _dbTransaction = dbTransaction;
+        _unitOfWork = unitOfWork;
         _cache = cache;
     }
 
     public async Task<Movement?> ReadById(int accountId, int id)
     {
-        var resultCache = await _cache.GetRecordAsync<Movement>(_caheKey + ":" + id);
+        var resultCache = await _cache.GetRecordAsync<Movement[]>(_caheKey + ":" + id);
         if (resultCache is null)
         {
-            var query = "SELECT * FROM movements WHERE account_id=@Id AND id=@id";
-            var parameters = new DynamicParameters();
-            parameters.Add("account_id", accountId);
-            parameters.Add("Id", id);
-            var resultDb = await _dbTransaction.Connection.QueryFirstOrDefaultAsync<object>(query, parameters);
-            return MovementMapper.Map(resultDb);
+            var data = await _unitOfWork.MovementRepository.ReadById(accountId, id);
+            await _cache.SetRecordAsync(_caheKey + id, data);
+            return data;
         }
         else
-            return resultCache;
+            return resultCache.Where(x => x.AccountId.Equals(accountId)).FirstOrDefault();
     }
 
     public async Task<IEnumerable<Movement>?> ReadByAccount(int accountId)
     {
-        var resultCache = await _cache.GetRecordAsync<Movement[]>(_caheKey + ":" + "*");
+        var cache = await _cache.GetRecordAsync<Movement[]>(_caheKey + ":" + "*");
+        var resultCache = cache.Where(x => x.AccountId.Equals(accountId));
         if (resultCache is null)
         {
-            var query = "SELECT * FROM movements WHERE account_id=@account_id";
-            var parameters = new DynamicParameters();
-            parameters.Add("account_id", accountId);
-            var resultDb = await _dbTransaction.Connection.QueryAsync<object>(query, parameters);
-            return MovementMapper.Map(resultDb);
-        }
-        else
-            return resultCache.Where(x => x.AccountId.Equals(accountId));
-    }
-
-    /*
-    public async Task<IEnumerable<Movement>?> ReadAll()
-    {
-        var resultCache = await _cache.GetRecordAsync<Movement[]>(_caheKey);
-        if (resultCache is null)
-        {
-            var query = "SELECT * FROM movements";
-            var resultDb = await _dbTransaction.Connection.QueryAsync(query);
-            return Map(resultDb);
+            var data = await _unitOfWork.MovementRepository.ReadByAccount(accountId);
+            foreach (Movement mov in data) await _cache.SetRecordAsync(_caheKey + ":" + mov.Id, mov);
+            return data;
         }
         else
             return resultCache;
     }
-    */
+
 
     public async Task<(bool, int?)> Create(Movement data)
     {
-        var query = "INSERT INTO movements (account_id, amount, balance)"
-            + " VALUES(@account_id,  @amount, @balance) RETURNING id";
-        var parameters = new DynamicParameters();
-        parameters.Add("account_id", data.AccountId);
-        parameters.Add("amount", data.Amount);
-        parameters.Add("balance", data.Balance);
-        var result = await _dbTransaction.Connection.ExecuteScalarAsync<int>(query, parameters, _dbTransaction);
-        if (result > 0) { data.Id = result; await _cache.SetRecordAsync(_caheKey + ":" + data.Id, data); }
-        return result > 0 ? (true, result) : (false, null);
+        var result = await _unitOfWork.MovementRepository.Create(data);
+        if (result.Item1) { data.Id = (int)result.Item2; await _cache.SetRecordAsync(_caheKey + ":" + data.Id, data); }
+        return result;
     }
 
-    public async Task<(bool, int?)> CreateLog(Transfer data)
+    public Task<(bool, int?)> CreateLog(Transfer data)
     {
-        var query = "INSERT INTO operations_log (data)"
-            + " VALUES(@data) RETURNING id";
-        var parameters = new DynamicParameters();
-        parameters.Add("data", null);
-        var result = await _dbTransaction.Connection.ExecuteScalarAsync<int>(query, parameters, _dbTransaction);
-        return result > 0 ? (true, result) : (false, null);
+        return _unitOfWork.MovementRepository.CreateLog(data);
     }
-    /*
-    public async Task<bool> Update(Movement data)
-    {
-        var query = "UPDATE movements SET amount=@amount, balance=@balance WHERE id=@id";
-        var parameters = new DynamicParameters();
-        parameters.Add("id", data.Id);
-        parameters.Add("amount", data.Amount);
-        parameters.Add("balance", data.Balance);
-        var result = await _dbTransaction.Connection.ExecuteAsync(query, parameters, _dbTransaction);
-        await _cache.RemoveAsync(_caheKey + data.Id);
-        await _cache.SetRecordAsync(_caheKey + data.Id, data);
-        return result > 0;
-    }
-
-    public async Task<bool> Delete(int id)
-    {
-        var query = "DELETE FROM movements WHERE id=@id";
-        var parameters = new DynamicParameters();
-        parameters.Add("id", id);
-        var result = await _dbTransaction.Connection.ExecuteAsync(query, parameters, _dbTransaction);
-        await _cache.RemoveAsync(_caheKey + id);
-        return result > 0;
-    }
-    */
 }

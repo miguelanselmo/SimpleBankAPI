@@ -1,6 +1,6 @@
 ﻿using SimpleBankAPI.Application.Interfaces;
 using SimpleBankAPI.Core.Entities;
-using SimpleBankAPI.Infrastructure.Repositories;
+using SimpleBankAPI.Infrastructure.Ports.Repositories;
 
 namespace SimpleBankAPI.Application.Usecases;
 

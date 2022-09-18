@@ -1,4 +1,5 @@
-﻿using SimpleBankAPI.Application.Interfaces;
+﻿using SimpleBankAPI.Application.Enums;
+using SimpleBankAPI.Application.Interfaces;
 using SimpleBankAPI.Infrastructure.Crypto;
 using SimpleBankAPI.Infrastructure.Ports.Repositories;
 
@@ -33,15 +34,15 @@ public class UserUseCase : IUserUseCase
                     return (true, null, user);
                 }
                 else
-                    return (false, "User not created. Please try again.", null);
+                    return (false, EnumHelper.GetEnumDescription(ErrorUsecase.UserNotCreated), null);
             }
             else
-                return (false, "Username already exists", null);
+                return (false, EnumHelper.GetEnumDescription(ErrorUsecase.UserUsernameExists), null);
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "Error creating user");
-            return (false, "Error creating user", null);
+            _logger.LogError(e, EnumHelper.GetEnumDescription(ErrorUsecase.UserCreateError));
+            return (false, EnumHelper.GetEnumDescription(ErrorUsecase.UserCreateError), null);
         }
         finally
         {

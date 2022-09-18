@@ -1,4 +1,5 @@
-﻿using SimpleBankAPI.Application.Interfaces;
+﻿using SimpleBankAPI.Application.Enums;
+using SimpleBankAPI.Application.Interfaces;
 using SimpleBankAPI.Infrastructure.Ports.Repositories;
 
 namespace SimpleBankAPI.Application.Usecases;
@@ -21,17 +22,17 @@ public class TransferUseCase : ITransferUseCase
         {
             _unitOfWork.Begin();
             if (transfer.ToAccountId == transfer.FromAccountId)
-                return (false, "The accounts are the same.", null);
+                return (false, EnumHelper.GetEnumDescription(ErrorUsecase.TransferSameAccount), null);
             var resultFrom = await _unitOfWork.AccountRepository.ReadById(transfer.UserId, transfer.FromAccountId);
             if (resultFrom is null)
-                return (false, "Account not found.", null);
+                return (false, EnumHelper.GetEnumDescription(ErrorUsecase.TransferAccountNotFound), null);
             if (transfer.Amount > resultFrom.Balance)
-                return (false, "Balance below amount.", null);
+                return (false, EnumHelper.GetEnumDescription(ErrorUsecase.TransferBalanceBelowAmount), null);
             var resultTo = await _unitOfWork.AccountRepository.ReadById(transfer.ToAccountId);
             if (resultTo is null)
-                return (false, "Destination account not found.", null);
+                return (false, EnumHelper.GetEnumDescription(ErrorUsecase.TransferDestinationAccountNotFound), null);
             if (resultFrom.Currency != resultTo.Currency)
-                return (false, "Account with different currencies.", null);
+                return (false, EnumHelper.GetEnumDescription(ErrorUsecase.TransferDifferentCurrencies), null);
 
             var resultMov = await _unitOfWork.MovementRepository.Create(
                 new Movement
@@ -42,7 +43,7 @@ public class TransferUseCase : ITransferUseCase
                 });
             commit = resultMov.Item1;
             if (!resultMov.Item1)
-                return (false, "Transfer error.", null);
+                return (false, EnumHelper.GetEnumDescription(ErrorUsecase.TransferError), null);
 
             var movementTo = new Movement
             {
@@ -53,7 +54,7 @@ public class TransferUseCase : ITransferUseCase
             resultMov = await _unitOfWork.MovementRepository.Create(movementTo);
             commit = resultMov.Item1;
             if (!resultMov.Item1)
-                return (false, "Transfer error.", null);
+                return (false, EnumHelper.GetEnumDescription(ErrorUsecase.TransferError), null);
 
             var resultAcc = await _unitOfWork.AccountRepository.Update(
                 new Account
@@ -63,7 +64,7 @@ public class TransferUseCase : ITransferUseCase
                 });
             commit = resultAcc;
             if (!resultAcc)
-                return (false, "Transfer error.", null);
+                return (false, EnumHelper.GetEnumDescription(ErrorUsecase.TransferError), null);
 
             resultAcc = await _unitOfWork.AccountRepository.Update(
                 new Account
@@ -73,7 +74,7 @@ public class TransferUseCase : ITransferUseCase
                 });
             commit = resultAcc;
             if (!resultAcc)
-                return (false, "Transfer error.", null);
+                return (false, EnumHelper.GetEnumDescription(ErrorUsecase.TransferError), null);
 
             transfer.CreatedAt = movementTo.CreatedAt;
             transfer.Id = movementTo.Id;
@@ -83,9 +84,9 @@ public class TransferUseCase : ITransferUseCase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error on transfer.");
+            _logger.LogError(ex, EnumHelper.GetEnumDescription(ErrorUsecase.TransferError));
             _unitOfWork.Rollback();
-            return (false, "Error on transfer.", null);
+            return (false, EnumHelper.GetEnumDescription(ErrorUsecase.TransferError), null);
         }
         finally
         {

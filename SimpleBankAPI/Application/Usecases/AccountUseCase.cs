@@ -27,12 +27,12 @@ public class AccountUseCase : IAccountUseCase
                 return (true, null, account);
             }
             else
-                return (result.Item1, "Account not created. Please try again.", null);
+                return (result.Item1, EnumHelper.GetEnumDescription(ErrorUsecase.AccountCreatError), null);
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "Error creating account");
-            return (false, "Error creating account. Please try again.", null);
+            _logger.LogError(e, EnumHelper.GetEnumDescription(ErrorUsecase.AccountCreatError));
+            return (false, EnumHelper.GetEnumDescription(ErrorUsecase.AccountCreatError), null);
         }
         finally
         {
@@ -48,12 +48,12 @@ public class AccountUseCase : IAccountUseCase
             if (result is not null)
                 return (true, null, result);
             else
-                return (false, "Accounts not found.", null);
+                return (false, EnumHelper.GetEnumDescription(ErrorUsecase.AccountNotFound), null);
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "Error getting accounts");
-            return (false, "Error getting accounts", null);
+            _logger.LogError(e, EnumHelper.GetEnumDescription(ErrorUsecase.AccountReadError));
+            return (false, EnumHelper.GetEnumDescription(ErrorUsecase.AccountReadError), null);
         }
     }
 
@@ -67,12 +67,12 @@ public class AccountUseCase : IAccountUseCase
                 return (true, null, result, await _unitOfWork.MovementRepository.ReadByAccount(id));
             }
             else
-                return (false, "Account not found.", null, null);
+                return (false, EnumHelper.GetEnumDescription(ErrorUsecase.AccountNotFound), null, null);
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "Error getting account movements");
-            return (false, "Error getting account movements", null, null);
+            _logger.LogError(e, EnumHelper.GetEnumDescription(ErrorUsecase.AccountMovementReadError));
+            return (false, EnumHelper.GetEnumDescription(ErrorUsecase.AccountMovementReadError), null, null);
         }
     }
 }

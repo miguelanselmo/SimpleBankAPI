@@ -33,18 +33,18 @@ public class SessionUseCase : ISessionUseCase
                     session.UserId = userDb.Id;
                     var result = await _unitOfWork.SessionRepository.Create(session);
                     commit = result;
-                    return result ? (true, null, userDb, session) : (false, "Error creating session", null, null);
+                    return result ? (true, null, userDb, session) : (false, EnumHelper.GetEnumDescription(ErrorUsecase.SessionCreateError), null, null);
                 }
                 else
-                    return (false, "Invalid authentication", null, null);
+                    return (false, EnumHelper.GetEnumDescription(ErrorUsecase.SessionInvalidAuthentication), null, null);
             }
             else
-                return (false, "User not found", null, null);
+                return (false, EnumHelper.GetEnumDescription(ErrorUsecase.SessionUserNotFound), null, null);
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "Error creating session");
-            return (false, "Error creating session", null, null);
+            _logger.LogError(e, EnumHelper.GetEnumDescription(ErrorUsecase.SessionCreateError));
+            return (false, EnumHelper.GetEnumDescription(ErrorUsecase.SessionCreateError), null, null);
         }
         finally
         {
@@ -71,9 +71,9 @@ public class SessionUseCase : ISessionUseCase
                     return (true, null, userDb, session);
                 }
                 else
-                    return (false, "User not found", null, null);
+                    return (false, EnumHelper.GetEnumDescription(ErrorUsecase.SessionUserNotFound), null, null);
             }
-            return (false, "Token refresh invalid or expired", null, null);
+            return (false, EnumHelper.GetEnumDescription(ErrorUsecase.SessionTokenRefreshInvalid), null, null);
             //}
             //else
             //    return (false, "Session already closed", null, null);
@@ -83,8 +83,8 @@ public class SessionUseCase : ISessionUseCase
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "Error renewing session");
-            return (false, "Error renewing session", null, null);
+            _logger.LogError(e, EnumHelper.GetEnumDescription(ErrorUsecase.SessionRenewError));
+            return (false, EnumHelper.GetEnumDescription(ErrorUsecase.SessionRenewError), null, null);
         }
         finally
         {
@@ -107,15 +107,15 @@ public class SessionUseCase : ISessionUseCase
                     return (true, null, sessionDb); ;
                 }
                 else
-                    return (false, "Session already closed", null);
+                    return (false, EnumHelper.GetEnumDescription(ErrorUsecase.SessionAlreadyClosed), null);
             }
             else
-                return (false, "Session not found", null);
+                return (false, EnumHelper.GetEnumDescription(ErrorUsecase.SessionNotFound), null);
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "Error closing session");
-            return (false, "Error closing session", null);
+            _logger.LogError(e, EnumHelper.GetEnumDescription(ErrorUsecase.SessionCloseError));
+            return (false, EnumHelper.GetEnumDescription(ErrorUsecase.SessionCloseError), null);
         }
         finally
         {
@@ -129,15 +129,15 @@ public class SessionUseCase : ISessionUseCase
         {
             var sessionDb = await _unitOfWork.SessionRepository.ReadById(session.Id);
             if (sessionDb is null)
-                return (false, "Session not found", null);
+                return (false, EnumHelper.GetEnumDescription(ErrorUsecase.SessionNotFound), null);
             if (!sessionDb.Active)
-                return (false, "Session is closed", sessionDb);
+                return (false, EnumHelper.GetEnumDescription(ErrorUsecase.SessionAlreadyClosed), sessionDb);
             return (true, null, sessionDb);
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "Error checking session");
-            return (false, "Error checking session", null);
+            _logger.LogError(e, EnumHelper.GetEnumDescription(ErrorUsecase.SessionCheckError));
+            return (false, EnumHelper.GetEnumDescription(ErrorUsecase.SessionCheckError), null);
         }
     }
 

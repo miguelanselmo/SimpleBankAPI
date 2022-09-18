@@ -6,3 +6,4 @@ global using SimpleBankAPI.Application.Usecases;
 global using SimpleBankAPI.Core.Entities;
 global using SimpleBankAPI.Core.Enums;
 global using SimpleBankAPI.Infrastructure.Ports.Repositories;
+global using SimpleBankAPI.Application.Enums;

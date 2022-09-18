@@ -23,7 +23,7 @@ public class AccountUseCaseTest
         var sessionRepositoryMock = new Mock<ISessionRepository>();
         
         _unitOfWork = new Mock<IUnitOfWork>();
-        //_unitOfWork.Setup(r => r.AccountRepository).Returns(accountRepositoryMock.Object);
+        //_unitOfWork.Setup(r => r.AccountRepository).Returns(accountRepositoryMock.Object);//not necessary
         _logger = new Mock<ILogger<AccountUseCase>>();
         _accountUseCase = new AccountUseCase(_logger.Object, _unitOfWork.Object);
 
@@ -32,7 +32,7 @@ public class AccountUseCaseTest
     #endregion
 
     #region Setup
-    public void Setup()
+    private void Setup()
     {
         _account = new Account { Id = 1, UserId = 1, Balance = 1000, Currency = Currency.EUR, CreatedAt = DateTime.Now };
         _movement = new Movement { Id = 1, AccountId = 1, Amount = 1000, Balance = 900, CreatedAt = DateTime.Now, UserId = 1 };
@@ -84,6 +84,7 @@ public class AccountUseCaseTest
         var result = await _accountUseCase.CreateAccount(_account);        
         // Assert
         Assert.False(result.Item1);
+        Assert.Equal(EnumHelper.GetEnumDescription(ErrorUsecase.AccountCreatError), result.Item2);
     }
 
     [Fact]
@@ -107,6 +108,7 @@ public class AccountUseCaseTest
         var result = await _accountUseCase.GetAccounts(userId);
         // Assert
         Assert.False(result.Item1);
+        Assert.Equal(EnumHelper.GetEnumDescription(ErrorUsecase.AccountReadError), result.Item2);
     }        
 
     [Fact]
@@ -122,6 +124,7 @@ public class AccountUseCaseTest
     }
 
     [Fact]
+    //Conta inexistente(not found)
     public async Task GetAccountById_TestNotFound()
     {
         // Arrange
@@ -131,6 +134,7 @@ public class AccountUseCaseTest
         var result = await _accountUseCase.GetAccountMovements(userId, id);
         // Assert
         Assert.False(result.Item1);
+        Assert.Equal(EnumHelper.GetEnumDescription(ErrorUsecase.AccountNotFound), result.Item2);
     }
 
     [Fact]
@@ -144,6 +148,7 @@ public class AccountUseCaseTest
         var result = await _accountUseCase.GetAccountMovements(userId, id);
         // Assert
         Assert.False(result.Item1);
+        Assert.Equal(EnumHelper.GetEnumDescription(ErrorUsecase.AccountMovementReadError), result.Item2);
     }
     #endregion
 }

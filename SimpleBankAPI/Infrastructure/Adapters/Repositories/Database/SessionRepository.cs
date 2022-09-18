@@ -1,7 +1,6 @@
 ﻿using Dapper;
-using SimpleBankAPI.Core.Entities;
-using SimpleBankAPI.Infrastructure.Ports.Repositories;
 using SimpleBankAPI.Infrastructure.Adapters.Repositories.Mapper;
+using SimpleBankAPI.Infrastructure.Ports.Repositories;
 using System.Data;
 
 namespace SimpleBankAPI.Infrastructure.Adapters.Repositories.Database;
@@ -23,23 +22,23 @@ internal class SessionRepository : ISessionRepository
         var resultDb = await _dbTransaction.Connection.QueryFirstOrDefaultAsync<object>(query, parameters);
         return SessionMapper.Map(resultDb);
     }
-/*
-    public async Task<IEnumerable<Session>?> ReadByUser(int userId)
-    {
-        var query = "SELECT * FROM sessions WHERE user_id=@user_id";
-        var parameters = new DynamicParameters();
-        parameters.Add("user_id", userId);
-        var resultDb = await _dbTransaction.Connection.QueryAsync<object>(query, parameters);
-        return SessionMapper.Map(resultDb);
-    }
     /*
-    public async Task<IEnumerable<Session>?> ReadAll()
-    {
-        var query = "SELECT * FROM sessions";
-        var resultDb = await _dbTransaction.Connection.QueryAsync(query);
-        return Map(resultDb);
-    }
-    */
+        public async Task<IEnumerable<Session>?> ReadByUser(int userId)
+        {
+            var query = "SELECT * FROM sessions WHERE user_id=@user_id";
+            var parameters = new DynamicParameters();
+            parameters.Add("user_id", userId);
+            var resultDb = await _dbTransaction.Connection.QueryAsync<object>(query, parameters);
+            return SessionMapper.Map(resultDb);
+        }
+        /*
+        public async Task<IEnumerable<Session>?> ReadAll()
+        {
+            var query = "SELECT * FROM sessions";
+            var resultDb = await _dbTransaction.Connection.QueryAsync(query);
+            return Map(resultDb);
+        }
+        */
 
     public async Task<bool> Create(Session data)
     {

@@ -37,6 +37,7 @@ public struct loginRequest
     public string Password { get; set; }
 }
 
+//TODO: 
 public struct loginResponse
 {
     [JsonPropertyNameAttribute("access_token")]
@@ -53,9 +54,15 @@ public struct loginResponse
     public registerResponse User { get; set; }
 }
 
+public struct logoutResponse
+{
+    [JsonPropertyNameAttribute("session_id")]
+    public string SessionId { get; set; }
+}
 public struct renewloginRequest
 {
     [JsonPropertyNameAttribute("refresh_token")]
     public string RefreshToken { get; set; }
 
 }
+

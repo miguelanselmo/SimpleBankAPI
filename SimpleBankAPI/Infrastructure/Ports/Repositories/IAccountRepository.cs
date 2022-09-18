@@ -1,6 +1,4 @@
-﻿using SimpleBankAPI.Core.Entities;
-
-namespace SimpleBankAPI.Infrastructure.Ports.Repositories;
+﻿namespace SimpleBankAPI.Infrastructure.Ports.Repositories;
 
 public interface IAccountRepository
 {

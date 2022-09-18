@@ -1,5 +1,4 @@
-﻿using SimpleBankAPI.Core.Entities;
-
+﻿
 namespace SimpleBankAPI.Application.Interfaces;
 
 public interface ITransferUseCase

@@ -1,7 +1,6 @@
 ﻿using Dapper;
-using SimpleBankAPI.Core.Entities;
-using SimpleBankAPI.Infrastructure.Ports.Repositories;
 using SimpleBankAPI.Infrastructure.Adapters.Repositories.Mapper;
+using SimpleBankAPI.Infrastructure.Ports.Repositories;
 using System.Data;
 
 namespace SimpleBankAPI.Infrastructure.Adapters.Repositories.Database;

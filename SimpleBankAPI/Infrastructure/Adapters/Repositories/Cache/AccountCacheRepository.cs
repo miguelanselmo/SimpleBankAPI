@@ -1,6 +1,4 @@
-﻿using Dapper;
-using Microsoft.Extensions.Caching.Distributed;
-using SimpleBankAPI.Core.Entities;
+﻿using Microsoft.Extensions.Caching.Distributed;
 using SimpleBankAPI.Infrastructure.Ports.Repositories;
 using System.Data;
 
@@ -8,7 +6,7 @@ namespace SimpleBankAPI.Infrastructure.Adapters.Repositories.Cache;
 
 internal class AccountCacheRepository : IAccountRepository
 {
-    
+
     private readonly IDistributedCache _cache;
     private const string _caheKey = "Account";
     private readonly IUnitOfWork _unitOfWork;
@@ -25,7 +23,7 @@ internal class AccountCacheRepository : IAccountRepository
         if (resultCache is null)
         {
             var data = await _unitOfWork.AccountRepository.ReadById(userId, id);
-            await _cache.SetRecordAsync(_caheKey+id, data);
+            await _cache.SetRecordAsync(_caheKey + id, data);
             return data;
         }
         else

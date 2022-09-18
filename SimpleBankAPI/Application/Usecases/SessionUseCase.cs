@@ -1,5 +1,4 @@
 ﻿using SimpleBankAPI.Application.Interfaces;
-using SimpleBankAPI.Core.Entities;
 using SimpleBankAPI.Infrastructure.Crypto;
 using SimpleBankAPI.Infrastructure.Ports.Providers;
 using SimpleBankAPI.Infrastructure.Ports.Repositories;
@@ -42,6 +41,11 @@ public class SessionUseCase : ISessionUseCase
             else
                 return (false, "User not found", null, null);
         }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Error creating session");
+            return (false, "Error creating session", null, null);
+        }
         finally
         {
             if (commit) _unitOfWork.Commit(); else _unitOfWork.Rollback();
@@ -77,6 +81,11 @@ public class SessionUseCase : ISessionUseCase
             //else
             //    return (false, "Session not found", null, null);
         }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Error renewing session");
+            return (false, "Error renewing session", null, null);
+        }
         finally
         {
         }
@@ -103,6 +112,11 @@ public class SessionUseCase : ISessionUseCase
             else
                 return (false, "Session not found", null);
         }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Error closing session");
+            return (false, "Error closing session", null);
+        }
         finally
         {
             if (commit) _unitOfWork.Commit(); else _unitOfWork.Rollback();
@@ -111,12 +125,20 @@ public class SessionUseCase : ISessionUseCase
 
     public async Task<(bool, string?, Session?)> CheckSession(Session session)
     {
-        var sessionDb = await _unitOfWork.SessionRepository.ReadById(session.Id);
-        if (sessionDb is null)
-            return (false, "Session not found", null);
-        if (!sessionDb.Active)
-            return (false, "Session is closed", sessionDb);
-        return (true, null, sessionDb);
+        try
+        {
+            var sessionDb = await _unitOfWork.SessionRepository.ReadById(session.Id);
+            if (sessionDb is null)
+                return (false, "Session not found", null);
+            if (!sessionDb.Active)
+                return (false, "Session is closed", sessionDb);
+            return (true, null, sessionDb);
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Error checking session");
+            return (false, "Error checking session", null);
+        }
     }
 
 }

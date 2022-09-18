@@ -1,11 +1,6 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Primitives;
-using SimpleBankAPI.Core.Entities;
-using SimpleBankAPI.WebApi.Models;
-using SimpleBankAPI.Application.Interfaces;
+﻿using SimpleBankAPI.Application.Interfaces;
 using SimpleBankAPI.Infrastructure.Ports.Providers;
+using SimpleBankAPI.WebApi.Models;
 
 namespace SimpleBankAPI.WebApi.Controllers;
 

@@ -1,7 +1,4 @@
-﻿using SimpleBankAPI.Core.Entities;
-using SimpleBankAPI.Core.Enums;
-
-namespace SimpleBankAPI.Infrastructure.Adapters.Repositories.Mapper
+﻿namespace SimpleBankAPI.Infrastructure.Adapters.Repositories.Mapper
 {
     public class AccountMapper
     {

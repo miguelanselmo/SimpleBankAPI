@@ -1,5 +1,4 @@
 ﻿using SimpleBankAPI.Application.Interfaces;
-using SimpleBankAPI.Core.Entities;
 using SimpleBankAPI.Infrastructure.Crypto;
 using SimpleBankAPI.Infrastructure.Ports.Repositories;
 
@@ -38,6 +37,11 @@ public class UserUseCase : IUserUseCase
             }
             else
                 return (false, "Username already exists", null);
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Error creating user");
+            return (false, "Error creating user", null);
         }
         finally
         {

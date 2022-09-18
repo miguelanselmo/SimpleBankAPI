@@ -1,6 +1,4 @@
-﻿using SimpleBankAPI.Core.Entities;
-
-namespace SimpleBankAPI.Infrastructure.Adapters.Repositories.Mapper
+﻿namespace SimpleBankAPI.Infrastructure.Adapters.Repositories.Mapper
 {
     public class SessionMapper
     {

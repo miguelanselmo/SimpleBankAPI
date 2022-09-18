@@ -1,5 +1,4 @@
 using FluentValidation.AspNetCore;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Npgsql;
@@ -7,9 +6,9 @@ using Serilog;
 using SimpleBankAPI.Application.Interfaces;
 using SimpleBankAPI.Application.Usecases;
 using SimpleBankAPI.Infrastructure.Adapters.Providers;
+using SimpleBankAPI.Infrastructure.Adapters.Repositories.Database;
 using SimpleBankAPI.Infrastructure.Ports.Providers;
 using SimpleBankAPI.Infrastructure.Ports.Repositories;
-using SimpleBankAPI.Infrastructure.Adapters.Repositories.Database;
 using SimpleBankAPI.WebApi.Validators;
 using System.Data;
 using System.Text;

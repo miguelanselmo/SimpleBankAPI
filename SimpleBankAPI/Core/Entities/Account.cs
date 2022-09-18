@@ -1,7 +1,4 @@
-﻿using SimpleBankAPI.Core.Enums;
-
-
-namespace SimpleBankAPI.Core.Entities;
+﻿namespace SimpleBankAPI.Core.Entities;
 
 public class Account
 {

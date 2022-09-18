@@ -1,5 +1,4 @@
 ﻿using SimpleBankAPI.Application.Interfaces;
-using SimpleBankAPI.Core.Entities;
 using SimpleBankAPI.Infrastructure.Ports.Repositories;
 
 namespace SimpleBankAPI.Application.Usecases;
@@ -30,6 +29,11 @@ public class AccountUseCase : IAccountUseCase
             else
                 return (result.Item1, "Account not created. Please try again.", null);
         }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Error creating account");
+            return (false, "Error creating account. Please try again.", null);
+        }
         finally
         {
             if (commit) _unitOfWork.Commit(); else _unitOfWork.Rollback();
@@ -38,21 +42,37 @@ public class AccountUseCase : IAccountUseCase
 
     public async Task<(bool, string?, IEnumerable<Account>)> GetAccounts(int userId)
     {
-        var result = await _unitOfWork.AccountRepository.ReadByUser(userId);
-        if (result is not null)
-            return (true, null, result);
-        else
-            return (false, "Accounts not found.", null);
+        try
+        {
+            var result = await _unitOfWork.AccountRepository.ReadByUser(userId);
+            if (result is not null)
+                return (true, null, result);
+            else
+                return (false, "Accounts not found.", null);
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Error getting accounts");
+            return (false, "Error getting accounts", null);
+        }
     }
 
     public async Task<(bool, string?, Account, IEnumerable<Movement>)> GetAccountMovements(int userId, int id)
     {
-        var result = await _unitOfWork.AccountRepository.ReadById(userId, id);
-        if (result is not null)
+        try
         {
-            return (true, null, result, await _unitOfWork.MovementRepository.ReadByAccount(id));
+            var result = await _unitOfWork.AccountRepository.ReadById(userId, id);
+            if (result is not null)
+            {
+                return (true, null, result, await _unitOfWork.MovementRepository.ReadByAccount(id));
+            }
+            else
+                return (false, "Account not found.", null, null);
         }
-        else
-            return (false, "Account not found.", null, null);
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Error getting account movements");
+            return (false, "Error getting account movements", null, null);
+        }
     }
 }

@@ -1,7 +1,4 @@
-﻿using Microsoft.Extensions.Primitives;
-using SimpleBankAPI.Core.Entities;
-
-namespace SimpleBankAPI.Infrastructure.Ports.Providers;
+﻿namespace SimpleBankAPI.Infrastructure.Ports.Providers;
 
 public interface IAuthenticationProvider
 {

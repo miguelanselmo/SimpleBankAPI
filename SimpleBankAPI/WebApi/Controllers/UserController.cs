@@ -1,11 +1,6 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Primitives;
-using SimpleBankAPI.Core.Entities;
-using SimpleBankAPI.WebApi.Models;
-using SimpleBankAPI.Application.Interfaces;
+﻿using SimpleBankAPI.Application.Interfaces;
 using SimpleBankAPI.Infrastructure.Ports.Providers;
+using SimpleBankAPI.WebApi.Models;
 
 namespace SimpleBankAPI.WebApi.Controllers;
 
@@ -46,7 +41,7 @@ public class UserController : Controller
             var result = await _useCase.CreateUser(account);
             if (result.Item1)
             {
-                return Ok(new registerResponse
+                return Created(string.Empty, new registerResponse
                 {
                     UserId = result.Item3.Id,
                     UserName = result.Item3.UserName,
@@ -112,7 +107,7 @@ public class UserController : Controller
 
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [HttpPost("Logout", Name = "Logout")]
-    [ProducesResponseType(typeof(loginResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(logoutResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(string), StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
@@ -127,7 +122,7 @@ public class UserController : Controller
                 return BadRequest(resultClaims.Item2);
             var result = await _sessionUseCase.Logout(resultClaims.Item3);
             if (result.Item1)
-                return Ok(result.Item3);
+                return Ok(result.Item3.Id);
             else
                 return BadRequest(result.Item2);
         }
@@ -175,7 +170,7 @@ public class UserController : Controller
                         CreatedAt = result.Item3.CreatedAt
                     }
                 };
-                return Ok(response);
+                return Created(String.Empty, response);
             }
             else
                 return Unauthorized(result.Item2);

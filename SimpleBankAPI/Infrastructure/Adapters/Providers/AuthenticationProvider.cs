@@ -1,6 +1,4 @@
-﻿using Microsoft.Extensions.Primitives;
-using Microsoft.IdentityModel.Tokens;
-using SimpleBankAPI.Core.Entities;
+﻿using Microsoft.IdentityModel.Tokens;
 using SimpleBankAPI.Infrastructure.Ports.Providers;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;

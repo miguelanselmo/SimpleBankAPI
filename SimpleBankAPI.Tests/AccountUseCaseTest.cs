@@ -1,4 +1,5 @@
 
+using Moq;
 using System.Collections.Generic;
 
 namespace SimpleBankAPI.Tests;
@@ -37,25 +38,16 @@ public class AccountUseCaseTest
         _account = new Account { Id = 1, UserId = 1, Balance = 1000, Currency = Currency.EUR, CreatedAt = DateTime.Now };
         _movement = new Movement { Id = 1, AccountId = 1, Amount = 1000, Balance = 900, CreatedAt = DateTime.Now, UserId = 1 };
         
-        _unitOfWork.Setup(r => r.AccountRepository.Create(_account)).Returns(CreateMockOK(_account));
+        _unitOfWork.Setup(r => r.AccountRepository.Create(_account)).ReturnsAsync(() => (true, _account.Id));
 
         var id = 1;
         var userId = 1;
-        _unitOfWork.Setup(r => r.AccountRepository.ReadById(userId, id)).Returns(ReadByIdMockOk());
+        _unitOfWork.Setup(r => r.AccountRepository.ReadById(userId, id)).ReturnsAsync(() => _account);
         _unitOfWork.Setup(r => r.MovementRepository.ReadByAccount(id)).Returns(ReadByAccountMockOk());
     }
 
-    private async Task<(bool, int?)> CreateMockOK(Account account)
-    {
-        return (true, account.Id);
-    }
 
-    private async Task<Account?> ReadByIdMockOk()
-    {
-        return _account;
-    }
-
-    private async Task<IEnumerable<Movement>?> ReadByAccountMockOk()
+     private async Task<IEnumerable<Movement>?> ReadByAccountMockOk()
     {
         var movements = new List<Movement>();
         movements.Add(_movement);
@@ -71,7 +63,7 @@ public class AccountUseCaseTest
         // Act
         var result = await _accountUseCase.CreateAccount(_account);        
         // Assert
-        Assert.True(result.Item1);
+        Assert.Null(result.Item1);
     }
 
 
@@ -83,7 +75,7 @@ public class AccountUseCaseTest
         // Act
         var result = await _accountUseCase.CreateAccount(_account);        
         // Assert
-        Assert.False(result.Item1);
+        Assert.NotNull(result.Item1);
         Assert.Equal(EnumHelper.GetEnumDescription(ErrorUsecase.AccountCreatError), result.Item2);
     }
 
@@ -95,7 +87,7 @@ public class AccountUseCaseTest
         // Act
         var result = await _accountUseCase.GetAccounts(userId);
         // Assert
-        Assert.True(result.Item1);
+        Assert.Null(result.Item1);
     }
 
     [Fact]
@@ -107,7 +99,7 @@ public class AccountUseCaseTest
         // Act
         var result = await _accountUseCase.GetAccounts(userId);
         // Assert
-        Assert.False(result.Item1);
+        Assert.NotNull(result.Item1);
         Assert.Equal(EnumHelper.GetEnumDescription(ErrorUsecase.AccountReadError), result.Item2);
     }        
 
@@ -120,7 +112,7 @@ public class AccountUseCaseTest
         // Act
         var result = await _accountUseCase.GetAccountMovements(userId, id);
         // Assert
-        Assert.True(result.Item1);
+        Assert.Null(result.Item1);
     }
 
     [Fact]
@@ -133,7 +125,7 @@ public class AccountUseCaseTest
         // Act
         var result = await _accountUseCase.GetAccountMovements(userId, id);
         // Assert
-        Assert.False(result.Item1);
+        Assert.NotNull(result.Item1);
         Assert.Equal(EnumHelper.GetEnumDescription(ErrorUsecase.AccountNotFound), result.Item2);
     }
 
@@ -147,7 +139,7 @@ public class AccountUseCaseTest
         // Act
         var result = await _accountUseCase.GetAccountMovements(userId, id);
         // Assert
-        Assert.False(result.Item1);
+        Assert.NotNull(result.Item1);
         Assert.Equal(EnumHelper.GetEnumDescription(ErrorUsecase.AccountMovementReadError), result.Item2);
     }
     #endregion

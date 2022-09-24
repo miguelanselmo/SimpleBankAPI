@@ -18,7 +18,7 @@ public class SessionUseCase : ISessionUseCase
         _unitOfWork = unitOfWork;
     }
 
-    public async Task<(bool, string?, User?, Session?)> Login(User user)
+    public async Task<(ErrorTypeUsecase?, string?, User?, Session?)> Login(User user)
     {
         bool commit = false;
         try
@@ -33,18 +33,18 @@ public class SessionUseCase : ISessionUseCase
                     session.UserId = userDb.Id;
                     var result = await _unitOfWork.SessionRepository.Create(session);
                     commit = result;
-                    return result ? (true, null, userDb, session) : (false, EnumHelper.GetEnumDescription(ErrorUsecase.SessionCreateError), null, null);
+                    return result ? (null, null, userDb, session) : (ErrorTypeUsecase.Business, EnumHelper.GetEnumDescription(ErrorUsecase.SessionCreateError), null, null);
                 }
                 else
-                    return (false, EnumHelper.GetEnumDescription(ErrorUsecase.SessionInvalidAuthentication), null, null);
+                    return (ErrorTypeUsecase.Business, EnumHelper.GetEnumDescription(ErrorUsecase.SessionInvalidAuthentication), null, null);
             }
             else
-                return (false, EnumHelper.GetEnumDescription(ErrorUsecase.SessionUserNotFound), null, null);
+                return (ErrorTypeUsecase.Business, EnumHelper.GetEnumDescription(ErrorUsecase.SessionUserNotFound), null, null);
         }
         catch (Exception e)
         {
             _logger.LogError(e, EnumHelper.GetEnumDescription(ErrorUsecase.SessionCreateError));
-            return (false, EnumHelper.GetEnumDescription(ErrorUsecase.SessionCreateError), null, null);
+            return (ErrorTypeUsecase.System, EnumHelper.GetEnumDescription(ErrorUsecase.SessionCreateError), null, null);
         }
         finally
         {
@@ -52,7 +52,7 @@ public class SessionUseCase : ISessionUseCase
         }
     }
 
-    public async Task<(bool, string?, User?, Session?)> RenewLogin(Session session, string refreshToken)
+    public async Task<(ErrorTypeUsecase?, string?, User?, Session?)> RenewLogin(Session session, string refreshToken)
     {
         bool commit = false;
         try
@@ -68,12 +68,12 @@ public class SessionUseCase : ISessionUseCase
                 if (userDb is not null)
                 {
                     session = _provider.RenewToken(userDb, session);
-                    return (true, null, userDb, session);
+                    return (null, null, userDb, session);
                 }
                 else
-                    return (false, EnumHelper.GetEnumDescription(ErrorUsecase.SessionUserNotFound), null, null);
+                    return (ErrorTypeUsecase.Business, EnumHelper.GetEnumDescription(ErrorUsecase.SessionUserNotFound), null, null);
             }
-            return (false, EnumHelper.GetEnumDescription(ErrorUsecase.SessionTokenRefreshInvalid), null, null);
+            return (ErrorTypeUsecase.Business, EnumHelper.GetEnumDescription(ErrorUsecase.SessionTokenRefreshInvalid), null, null);
             //}
             //else
             //    return (false, "Session already closed", null, null);
@@ -84,14 +84,14 @@ public class SessionUseCase : ISessionUseCase
         catch (Exception e)
         {
             _logger.LogError(e, EnumHelper.GetEnumDescription(ErrorUsecase.SessionRenewError));
-            return (false, EnumHelper.GetEnumDescription(ErrorUsecase.SessionRenewError), null, null);
+            return (ErrorTypeUsecase.System, EnumHelper.GetEnumDescription(ErrorUsecase.SessionRenewError), null, null);
         }
         finally
         {
         }
     }
 
-    public async Task<(bool, string?, Session?)> Logout(Session session)
+    public async Task<(ErrorTypeUsecase?, string?, Session?)> Logout(Session session)
     {
         bool commit = false;
         try
@@ -104,18 +104,18 @@ public class SessionUseCase : ISessionUseCase
                     sessionDb.Active = false;
                     var result = await _unitOfWork.SessionRepository.Update(sessionDb);
                     commit = result;
-                    return (true, null, sessionDb); ;
+                    return (null, null, sessionDb); ;
                 }
                 else
-                    return (false, EnumHelper.GetEnumDescription(ErrorUsecase.SessionAlreadyClosed), null);
+                    return (ErrorTypeUsecase.Business, EnumHelper.GetEnumDescription(ErrorUsecase.SessionAlreadyClosed), null);
             }
             else
-                return (false, EnumHelper.GetEnumDescription(ErrorUsecase.SessionNotFound), null);
+                return (ErrorTypeUsecase.Business, EnumHelper.GetEnumDescription(ErrorUsecase.SessionNotFound), null);
         }
         catch (Exception e)
         {
             _logger.LogError(e, EnumHelper.GetEnumDescription(ErrorUsecase.SessionCloseError));
-            return (false, EnumHelper.GetEnumDescription(ErrorUsecase.SessionCloseError), null);
+            return (ErrorTypeUsecase.System, EnumHelper.GetEnumDescription(ErrorUsecase.SessionCloseError), null);
         }
         finally
         {
@@ -123,21 +123,21 @@ public class SessionUseCase : ISessionUseCase
         }
     }
 
-    public async Task<(bool, string?, Session?)> CheckSession(Session session)
+    public async Task<(ErrorTypeUsecase?, string?, Session?)> CheckSession(Session session)
     {
         try
         {
             var sessionDb = await _unitOfWork.SessionRepository.ReadById(session.Id);
             if (sessionDb is null)
-                return (false, EnumHelper.GetEnumDescription(ErrorUsecase.SessionNotFound), null);
+                return (ErrorTypeUsecase.Business, EnumHelper.GetEnumDescription(ErrorUsecase.SessionNotFound), null);
             if (!sessionDb.Active)
-                return (false, EnumHelper.GetEnumDescription(ErrorUsecase.SessionAlreadyClosed), sessionDb);
-            return (true, null, sessionDb);
+                return (ErrorTypeUsecase.Business, EnumHelper.GetEnumDescription(ErrorUsecase.SessionAlreadyClosed), sessionDb);
+            return (null, null, sessionDb);
         }
         catch (Exception e)
         {
             _logger.LogError(e, EnumHelper.GetEnumDescription(ErrorUsecase.SessionCheckError));
-            return (false, EnumHelper.GetEnumDescription(ErrorUsecase.SessionCheckError), null);
+            return (ErrorTypeUsecase.System, EnumHelper.GetEnumDescription(ErrorUsecase.SessionCheckError), null);
         }
     }
 

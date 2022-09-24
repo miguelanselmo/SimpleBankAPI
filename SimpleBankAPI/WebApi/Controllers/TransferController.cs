@@ -36,7 +36,7 @@ public class TransferController : Controller
             if (!resultClaims.Item1)
                 return BadRequest(resultClaims.Item2);
             var resultSession = await _sessionUseCase.CheckSession(resultClaims.Item3);
-            if (!resultSession.Item1)
+            if (resultSession.Item1 is not null)
                 return Unauthorized(resultSession.Item2);
 
             var account = new Transfer
@@ -47,7 +47,18 @@ public class TransferController : Controller
                 UserId = resultClaims.Item3.UserId
             };
             var result = await _useCase.Transfer(account);
-            return result.Item1 ? Ok(new transferResponse { Amount = request.Amount * (-1), Balance = result.Item3.Balance }) : BadRequest(result.Item2);
+
+
+            switch (result.Item1)
+            {
+                case null:
+                    return Ok(new transferResponse { Amount = request.Amount * (-1), Balance = result.Item3.Balance });
+                case ErrorTypeUsecase.Business:
+                    return BadRequest(result.Item2);
+                case ErrorTypeUsecase.System:
+                default:
+                    return Problem(result.Item2);
+            }
         }
         catch (Exception ex)
         {

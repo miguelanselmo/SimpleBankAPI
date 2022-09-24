@@ -3,5 +3,5 @@ namespace SimpleBankAPI.Application.Interfaces;
 
 public interface IUserUseCase
 {
-    Task<(bool, string?, User?)> CreateUser(User user);
+    Task<(ErrorTypeUsecase?, string?, User?)> CreateUser(User user);
 }

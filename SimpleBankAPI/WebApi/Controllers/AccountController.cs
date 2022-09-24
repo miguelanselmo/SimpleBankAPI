@@ -35,8 +35,8 @@ public class AccountController : Controller
             var resultClaims = _provider.GetClaims(Request.Headers.Authorization);
             if (!resultClaims.Item1)
                 return BadRequest(resultClaims.Item2);
-            var resultSession = await _sessionUseCase.CheckSession(resultClaims.Item3);
-            if (!resultSession.Item1)
+            var resultSession = await _sessionUseCase.CheckSession(resultClaims.Item3);            
+            if (resultSession.Item1 is not null)
                 return Unauthorized(resultSession.Item2);
 
             var account = new Account
@@ -46,17 +46,22 @@ public class AccountController : Controller
                 UserId = resultClaims.Item3.UserId
             };
             var result = await _useCase.CreateAccount(account);
-            if (result.Item1)
+            
+            switch(result.Item1)
             {
-                return Created(String.Empty, new createAccountResponse
-                {
-                    AccountId = result.Item3.Id,
-                    Balance = result.Item3.Balance,
-                    Currency = result.Item3.Currency.ToString(),
-                });
+                case null:
+                    return Created(String.Empty, new createAccountResponse
+                    {
+                        AccountId = result.Item3.Id,
+                        Balance = result.Item3.Balance,
+                        Currency = result.Item3.Currency.ToString(),
+                    });
+                case ErrorTypeUsecase.Business:
+                    return BadRequest(result.Item2);
+                case ErrorTypeUsecase.System:
+                default:
+                    return Problem(result.Item2);
             }
-            else
-                return BadRequest(result.Item2);
         }
         catch (Exception ex)
         {
@@ -78,17 +83,28 @@ public class AccountController : Controller
             if (!resultClaims.Item1)
                 return BadRequest(resultClaims.Item2);
             var resultSession = await _sessionUseCase.CheckSession(resultClaims.Item3);
-            if (!resultSession.Item1)
+            if (resultSession.Item1 is not null)
                 return Unauthorized(resultSession.Item2);
 
             var result = await _useCase.GetAccounts(resultClaims.Item3.UserId);
-            return Ok(result.Item3.Select(x => new account
+
+            switch (result.Item1)
             {
-                AccountId = x.Id,
-                Balance = x.Balance,
-                Currency = x.Currency.ToString(),
-                CreatedAt = x.CreatedAt
-            }));
+                case null:
+                    return Ok(result.Item3.Select(x => new account
+                    {
+                        AccountId = x.Id,
+                        Balance = x.Balance,
+                        Currency = x.Currency.ToString(),
+                        CreatedAt = x.CreatedAt
+                    }));
+                case ErrorTypeUsecase.Business:
+                    return BadRequest(result.Item2);
+                case ErrorTypeUsecase.System:
+                default:
+                    return Problem(result.Item2);
+            }
+            
         }
         catch (Exception ex)
         {
@@ -111,25 +127,35 @@ public class AccountController : Controller
             if (!resultClaims.Item1)
                 return BadRequest(resultClaims.Item2);
             var resultSession = await _sessionUseCase.CheckSession(resultClaims.Item3);
-            if (!resultSession.Item1)
+            if (resultSession.Item1 is not null)
                 return Unauthorized(resultSession.Item2);
 
             var result = await _useCase.GetAccountMovements(resultClaims.Item3.UserId, id);
-            if (result.Item3 is null)
-                return NotFound(result.Item2);
-            else
-                return Ok(new account
-                {
-                    AccountId = result.Item3.Id,
-                    Balance = result.Item3.Balance,
-                    Currency = result.Item3.Currency.ToString(),
-                    CreatedAt = result.Item3.CreatedAt,
-                    Movs = result.Item4.Select(x => new movements
-                    {
-                        Amount = x.Amount,
-                        CreatedAt = x.CreatedAt
-                    })
-                });
+
+            switch (result.Item1)
+            {
+                case null:
+                    if (result.Item3 is null)
+                        return NotFound(result.Item2);
+                    else
+                        return Ok(new account
+                        {
+                            AccountId = result.Item3.Id,
+                            Balance = result.Item3.Balance,
+                            Currency = result.Item3.Currency.ToString(),
+                            CreatedAt = result.Item3.CreatedAt,
+                            Movs = result.Item4.Select(x => new movements
+                            {
+                                Amount = x.Amount,
+                                CreatedAt = (DateTime)x.CreatedAt
+                            })
+                        });
+                case ErrorTypeUsecase.Business:
+                    return NotFound(result.Item2);
+                case ErrorTypeUsecase.System:
+                default:
+                    return Problem(result.Item2);
+            }
         }
         catch (Exception ex)
         {

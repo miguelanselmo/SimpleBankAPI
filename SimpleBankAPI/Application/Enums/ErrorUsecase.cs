@@ -2,6 +2,13 @@
 
 namespace SimpleBankAPI.Application.Enums;
 
+public enum ErrorTypeUsecase
+{
+    [Description("System error.")]
+    System,
+    [Description("Business error.")]
+    Business,
+}
 public enum ErrorUsecase
 {
     //Account

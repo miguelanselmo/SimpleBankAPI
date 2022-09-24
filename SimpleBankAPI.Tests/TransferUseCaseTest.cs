@@ -1,4 +1,6 @@
 ﻿
+using Moq;
+
 namespace SimpleBankAPI.Tests;
 
 public class TransferUseCaseTest
@@ -30,7 +32,7 @@ public class TransferUseCaseTest
         //_unitOfWork.Setup(r => r.MovementRepository).Returns(movementRepositorMock.Object);//not necessary
         _logger = new Mock<ILogger<TransferUseCase>>();
         _transferUseCase = new TransferUseCase(_logger.Object, _unitOfWork.Object);
-
+        
         Setup();       
     }
     #endregion
@@ -43,41 +45,44 @@ public class TransferUseCaseTest
         _account1 = new Account { Id = 1, UserId = 1, Balance = 900, Currency = Currency.EUR, CreatedAt = DateTime.Now };
         _account2 = new Account { Id = 2, UserId = 2, Balance = 900, Currency = Currency.EUR, CreatedAt = DateTime.Now };
 
-        var userId = 1;
+        //var userId = 1;
         //_unitOfWork.Setup(r => r.AccountRepository.Create(_account1)).Returns(CreateMockOK(_account1));
         //_unitOfWork.Setup(r => r.AccountRepository.Create(_account2)).Returns(CreateMockOK(_account2));
 
-        _unitOfWork.Setup(r => r.AccountRepository.ReadById(userId, 1)).Returns(ReadByIdMockOk(1));
-        _unitOfWork.Setup(r => r.AccountRepository.ReadById(2)).Returns(ReadByIdMockOk(2));
+        _unitOfWork.Setup(r => r.AccountRepository.ReadById(_account1.UserId, _account1.Id)).ReturnsAsync(() => (_account1));
+        _unitOfWork.Setup(r => r.AccountRepository.ReadById(_account2.Id)).ReturnsAsync(() =>  (_account2));
 
-        //_unitOfWork.Setup(r => r.AccountRepository.Update(_account1)).Returns(UpdateMockOK());
-        //_unitOfWork.Setup(r => r.AccountRepository.Update(_account2)).Returns(UpdateMockOK());
+        _unitOfWork.Setup(r => r.AccountRepository.Update(It.IsAny<Account>())).ReturnsAsync(() => (true));
+        _unitOfWork.Setup(r => r.AccountRepository.Update(It.IsAny<Account>())).ReturnsAsync(() => (true));
 
-        _movement1 = new Movement { Id = 1, AccountId = _transfer.FromAccountId, Amount = _transfer.Amount * (-1), Balance = _account1.Balance - _transfer.Amount, CreatedAt = DateTime.Now, UserId = _transfer.UserId };
-        _movement2 = new Movement { Id = 2, AccountId = _transfer.ToAccountId, Amount = _transfer.Amount, Balance = _account2.Balance + _transfer.Amount, CreatedAt = DateTime.Now, UserId = _transfer.UserId };
-        _unitOfWork.Setup(r => r.MovementRepository.Create(_movement1)).Returns(CreateMockOK(_movement1));
-        _unitOfWork.Setup(r => r.MovementRepository.Create(_movement2)).Returns(CreateMockOK(_movement2));        
+        _movement1 = new Movement { Id = 1, AccountId = _transfer.FromAccountId, Amount = _transfer.Amount * (-1), Balance = _account1.Balance - _transfer.Amount, CreatedAt = DateTime.Now, UserId = 1 };
+        _movement2 = new Movement { Id = 2, AccountId = _transfer.ToAccountId, Amount = _transfer.Amount, Balance = _account2.Balance + _transfer.Amount, CreatedAt = DateTime.Now, UserId = 1 };
+        _unitOfWork.Setup(r => r.MovementRepository.Create(It.IsAny<Movement>())).ReturnsAsync(() => (true, 1));
+        _unitOfWork.Setup(r => r.MovementRepository.Create(It.IsAny<Movement>())).ReturnsAsync(() => (true, 2));
     }
-
+    /*
     private async Task<(bool, int?)> CreateMockOK(Movement movement)
     {
         return (true, movement.Id);
     }
-
+    /*
     private async Task<(bool, int?)> CreateMockOK(Account account)
     {
         return (true, account.Id);
     }
-
+    */
+    /*
     private async Task<bool> UpdateMockOK()
     {
         return true;
     }
-
+    */
+    /*
     private async Task<Account?> ReadByIdMockOk(int id)
     {
         return id == 1 ?  _account1 :_account2;
     }
+    */
     #endregion
 
     #region Tests
@@ -88,7 +93,7 @@ public class TransferUseCaseTest
         // Act
         var result = await _transferUseCase.Transfer(_transfer);
         // Assert
-        Assert.True(result.Item1);
+        Assert.Null(result.Item1);
     }
 
     [Fact]
@@ -100,7 +105,7 @@ public class TransferUseCaseTest
         // Act
         var result = await _transferUseCase.Transfer(_transfer);
         // Assert
-        Assert.False(result.Item1);
+        Assert.NotNull(result.Item1);
         Assert.Equal(EnumHelper.GetEnumDescription(ErrorUsecase.TransferAccountNotFound), result.Item2, ignoreCase: true);
     }
 
@@ -113,7 +118,7 @@ public class TransferUseCaseTest
         // Act
         var result = await _transferUseCase.Transfer(_transfer);
         // Assert
-        Assert.False(result.Item1);
+        Assert.NotNull(result.Item1);
         Assert.Equal(EnumHelper.GetEnumDescription(ErrorUsecase.TransferDifferentCurrencies), result.Item2, ignoreCase: true);
     }
 
@@ -126,7 +131,7 @@ public class TransferUseCaseTest
         // Act
         var result = await _transferUseCase.Transfer(_transfer);
         // Assert
-        Assert.False(result.Item1);
+        Assert.NotNull(result.Item1);
         Assert.Equal(EnumHelper.GetEnumDescription(ErrorUsecase.TransferBalanceBelowAmount), result.Item2, ignoreCase: true);
     }
 
@@ -139,7 +144,7 @@ public class TransferUseCaseTest
         // Act
         var result = await _transferUseCase.Transfer(_transfer);
         // Assert
-        Assert.False(result.Item1);
+        Assert.NotNull(result.Item1);
         Assert.Equal(EnumHelper.GetEnumDescription(ErrorUsecase.TransferSameAccount), result.Item2, ignoreCase: true);
     }
     
@@ -152,7 +157,7 @@ public class TransferUseCaseTest
         // Act
         var result = await _transferUseCase.Transfer(_transfer);
         // Assert
-        Assert.False(result.Item1);
+        Assert.NotNull(result.Item1);
         Assert.Equal(EnumHelper.GetEnumDescription(ErrorUsecase.TransferError), result.Item2, ignoreCase: true);
     }
     #endregion

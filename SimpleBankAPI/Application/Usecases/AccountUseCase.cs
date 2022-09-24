@@ -14,7 +14,7 @@ public class AccountUseCase : IAccountUseCase
         _unitOfWork = unitOfWork;
     }
 
-    public async Task<(bool, string?, Account?)> CreateAccount(Account account)
+    public async Task<(ErrorTypeUsecase?, string?, Account?)> CreateAccount(Account account)
     {
         bool commit = false;
         try
@@ -24,15 +24,15 @@ public class AccountUseCase : IAccountUseCase
             {
                 commit = true;
                 account.Id = (int)result.Item2;
-                return (true, null, account);
+                return (null, null, account);
             }
             else
-                return (result.Item1, EnumHelper.GetEnumDescription(ErrorUsecase.AccountCreatError), null);
+                return (ErrorTypeUsecase.Business, EnumHelper.GetEnumDescription(ErrorUsecase.AccountCreatError), null);
         }
         catch (Exception e)
         {
             _logger.LogError(e, EnumHelper.GetEnumDescription(ErrorUsecase.AccountCreatError));
-            return (false, EnumHelper.GetEnumDescription(ErrorUsecase.AccountCreatError), null);
+            return (ErrorTypeUsecase.System, EnumHelper.GetEnumDescription(ErrorUsecase.AccountCreatError), null);
         }
         finally
         {
@@ -40,39 +40,39 @@ public class AccountUseCase : IAccountUseCase
         }
     }
 
-    public async Task<(bool, string?, IEnumerable<Account>)> GetAccounts(int userId)
+    public async Task<(ErrorTypeUsecase?, string?, IEnumerable<Account>?)> GetAccounts(int userId)
     {
         try
         {
             var result = await _unitOfWork.AccountRepository.ReadByUser(userId);
             if (result is not null)
-                return (true, null, result);
+                return (null, null, result);
             else
-                return (false, EnumHelper.GetEnumDescription(ErrorUsecase.AccountNotFound), null);
+                return (ErrorTypeUsecase.Business, EnumHelper.GetEnumDescription(ErrorUsecase.AccountNotFound), null);
         }
         catch (Exception e)
         {
             _logger.LogError(e, EnumHelper.GetEnumDescription(ErrorUsecase.AccountReadError));
-            return (false, EnumHelper.GetEnumDescription(ErrorUsecase.AccountReadError), null);
+            return (ErrorTypeUsecase.System, EnumHelper.GetEnumDescription(ErrorUsecase.AccountReadError), null);
         }
     }
 
-    public async Task<(bool, string?, Account, IEnumerable<Movement>)> GetAccountMovements(int userId, int id)
+    public async Task<(ErrorTypeUsecase?, string?, Account?, IEnumerable<Movement>?)> GetAccountMovements(int userId, int id)
     {
         try
         {
             var result = await _unitOfWork.AccountRepository.ReadById(userId, id);
             if (result is not null)
             {
-                return (true, null, result, await _unitOfWork.MovementRepository.ReadByAccount(id));
+                return (null, null, result, await _unitOfWork.MovementRepository.ReadByAccount(id));
             }
             else
-                return (false, EnumHelper.GetEnumDescription(ErrorUsecase.AccountNotFound), null, null);
+                return (ErrorTypeUsecase.Business, EnumHelper.GetEnumDescription(ErrorUsecase.AccountNotFound), null, null);
         }
         catch (Exception e)
         {
             _logger.LogError(e, EnumHelper.GetEnumDescription(ErrorUsecase.AccountMovementReadError));
-            return (false, EnumHelper.GetEnumDescription(ErrorUsecase.AccountMovementReadError), null, null);
+            return (ErrorTypeUsecase.System, EnumHelper.GetEnumDescription(ErrorUsecase.AccountMovementReadError), null, null);
         }
     }
 }

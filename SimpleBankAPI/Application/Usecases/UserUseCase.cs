@@ -16,7 +16,7 @@ public class UserUseCase : IUserUseCase
         _unitOfWork = unitOfWork;
     }
 
-    public async Task<(bool, string?, User?)> CreateUser(User user)
+    public async Task<(ErrorTypeUsecase?, string?, User?)> CreateUser(User user)
     {
         bool commit = false;
         try
@@ -31,18 +31,18 @@ public class UserUseCase : IUserUseCase
                 {
                     commit = true;
                     user.Id = (int)result.Item2;
-                    return (true, null, user);
+                    return (null, null, user);
                 }
                 else
-                    return (false, EnumHelper.GetEnumDescription(ErrorUsecase.UserNotCreated), null);
+                    return (ErrorTypeUsecase.Business, EnumHelper.GetEnumDescription(ErrorUsecase.UserNotCreated), null);
             }
             else
-                return (false, EnumHelper.GetEnumDescription(ErrorUsecase.UserUsernameExists), null);
+                return (ErrorTypeUsecase.Business, EnumHelper.GetEnumDescription(ErrorUsecase.UserUsernameExists), null);
         }
         catch (Exception e)
         {
             _logger.LogError(e, EnumHelper.GetEnumDescription(ErrorUsecase.UserCreateError));
-            return (false, EnumHelper.GetEnumDescription(ErrorUsecase.UserCreateError), null);
+            return (ErrorTypeUsecase.System, EnumHelper.GetEnumDescription(ErrorUsecase.UserCreateError), null);
         }
         finally
         {

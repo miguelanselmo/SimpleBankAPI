@@ -3,9 +3,9 @@ namespace SimpleBankAPI.Application.Interfaces;
 
 public interface ISessionUseCase
 {
-    Task<(bool, string?, User?, Session?)> Login(User user);
-    Task<(bool, string?, Session?)> Logout(Session session);
-    Task<(bool, string?, Session?)> CheckSession(Session session);
-    Task<(bool, string?, User?, Session?)> RenewLogin(Session session, string refreshToken);
+    Task<(ErrorTypeUsecase?, string?, User?, Session?)> Login(User user);
+    Task<(ErrorTypeUsecase?, string?, Session?)> Logout(Session session);
+    Task<(ErrorTypeUsecase?, string?, Session?)> CheckSession(Session session);
+    Task<(ErrorTypeUsecase?, string?, User?, Session?)> RenewLogin(Session session, string refreshToken);
 
 }

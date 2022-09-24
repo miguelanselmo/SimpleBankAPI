@@ -39,18 +39,25 @@ public class UserController : Controller
                 FullName = request.FullName
             };
             var result = await _useCase.CreateUser(account);
-            if (result.Item1)
+
+
+            switch (result.Item1)
             {
-                return Created(string.Empty, new registerResponse
-                {
-                    UserId = result.Item3.Id,
-                    UserName = result.Item3.UserName,
-                    Email = result.Item3.Email,
-                    FullName = result.Item3.FullName
-                });
+                case null:
+                    return Created(string.Empty, new registerResponse
+                    {
+                        UserId = result.Item3.Id,
+                        UserName = result.Item3.UserName,
+                        Email = result.Item3.Email,
+                        FullName = result.Item3.FullName
+                    });
+                case ErrorTypeUsecase.Business:
+                    return BadRequest(result.Item2);
+                case ErrorTypeUsecase.System:
+                default:
+                    return Problem(result.Item2);
+
             }
-            else
-                return BadRequest(result.Item2);
         }
         catch (Exception ex)
         {
@@ -75,28 +82,33 @@ public class UserController : Controller
                 Password = request.Password
             };
             var result = await _sessionUseCase.Login(account);
-            if (result.Item1)
+
+            switch (result.Item1)
             {
-                loginResponse response = new loginResponse
-                {
-                    AccessToken = result.Item4.TokenAccess,
-                    AccessTokenExpiresAt = result.Item4.TokenAccessExpireAt,
-                    RefreshToken = result.Item4.TokenRefresh,
-                    RefreshTokenExpiresAt = result.Item4.TokenRefreshExpireAt,
-                    SessionId = result.Item4.Id.ToString(),
-                    User = new registerResponse
+                case null:
+                    loginResponse response = new loginResponse
                     {
-                        UserId = result.Item3.Id,
-                        UserName = result.Item3.UserName,
-                        Email = result.Item3.Email,
-                        FullName = result.Item3.FullName,
-                        CreatedAt = result.Item3.CreatedAt
-                    }
-                };
-                return Ok(response);
+                        AccessToken = result.Item4.TokenAccess,
+                        AccessTokenExpiresAt = result.Item4.TokenAccessExpireAt,
+                        RefreshToken = result.Item4.TokenRefresh,
+                        RefreshTokenExpiresAt = result.Item4.TokenRefreshExpireAt,
+                        SessionId = result.Item4.Id.ToString(),
+                        User = new registerResponse
+                        {
+                            UserId = result.Item3.Id,
+                            UserName = result.Item3.UserName,
+                            Email = result.Item3.Email,
+                            FullName = result.Item3.FullName,
+                            CreatedAt = result.Item3.CreatedAt
+                        }
+                    };
+                    return Ok(response);
+                case ErrorTypeUsecase.Business:
+                    return Unauthorized(result.Item2);
+                case ErrorTypeUsecase.System:
+                default:
+                    return Problem(result.Item2);
             }
-            else
-                return Unauthorized(result.Item2);
         }
         catch (Exception ex)
         {
@@ -120,11 +132,19 @@ public class UserController : Controller
             var resultClaims = _provider.GetClaims(authToken);
             if (!resultClaims.Item1)
                 return BadRequest(resultClaims.Item2);
+            
             var result = await _sessionUseCase.Logout(resultClaims.Item3);
-            if (result.Item1)
-                return Ok(result.Item3.Id);
-            else
-                return BadRequest(result.Item2);
+
+            switch (result.Item1)
+            {
+                case null:
+                    return Ok(result.Item3.Id);
+                case ErrorTypeUsecase.Business:
+                    return BadRequest(result.Item2);
+                case ErrorTypeUsecase.System:
+                default:
+                    return Problem(result.Item2);
+            }
         }
         catch (Exception ex)
         {
@@ -149,31 +169,37 @@ public class UserController : Controller
             if (!resultClaims.Item1)
                 return BadRequest(resultClaims.Item2);
             var resultSession = await _sessionUseCase.CheckSession(resultClaims.Item3);
-            if (!resultSession.Item1)
+            if (resultSession.Item1 is not null)
                 return Unauthorized(resultSession.Item2);
+            
             var result = await _sessionUseCase.RenewLogin(resultSession.Item3, tokenRefresh.RefreshToken);
-            if (result.Item1)
+
+            switch (result.Item1)
             {
-                loginResponse response = new loginResponse
-                {
-                    AccessToken = result.Item4.TokenAccess,
-                    AccessTokenExpiresAt = result.Item4.TokenAccessExpireAt,
-                    RefreshToken = result.Item4.TokenRefresh,
-                    RefreshTokenExpiresAt = result.Item4.TokenRefreshExpireAt,
-                    SessionId = result.Item4.Id.ToString(),
-                    User = new registerResponse
+                case null:
+                    loginResponse response = new loginResponse
                     {
-                        UserId = result.Item3.Id,
-                        UserName = result.Item3.UserName,
-                        Email = result.Item3.Email,
-                        FullName = result.Item3.FullName,
-                        CreatedAt = result.Item3.CreatedAt
-                    }
-                };
-                return Created(String.Empty, response);
-            }
-            else
-                return Unauthorized(result.Item2);
+                        AccessToken = result.Item4.TokenAccess,
+                        AccessTokenExpiresAt = result.Item4.TokenAccessExpireAt,
+                        RefreshToken = result.Item4.TokenRefresh,
+                        RefreshTokenExpiresAt = result.Item4.TokenRefreshExpireAt,
+                        SessionId = result.Item4.Id.ToString(),
+                        User = new registerResponse
+                        {
+                            UserId = result.Item3.Id,
+                            UserName = result.Item3.UserName,
+                            Email = result.Item3.Email,
+                            FullName = result.Item3.FullName,
+                            CreatedAt = result.Item3.CreatedAt
+                        }
+                    };
+                    return Created(String.Empty, response);
+                case ErrorTypeUsecase.Business:
+                    return Unauthorized(result.Item2);
+                case ErrorTypeUsecase.System:
+                default:
+                    return Problem(result.Item2);
+            }                
         }
         catch (Exception ex)
         {

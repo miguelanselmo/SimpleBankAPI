@@ -7,6 +7,7 @@ using SimpleBankAPI.Application.Interfaces;
 using SimpleBankAPI.Application.Usecases;
 using SimpleBankAPI.Infrastructure.Adapters.Providers;
 using SimpleBankAPI.Infrastructure.Adapters.Repositories.Database;
+using SimpleBankAPI.Infrastructure.Adapters.Repositories.File;
 using SimpleBankAPI.Infrastructure.Ports.Providers;
 using SimpleBankAPI.Infrastructure.Ports.Repositories;
 using SimpleBankAPI.WebApi.Validators;
@@ -31,15 +32,18 @@ builder.Services.AddScoped<IDbTransaction>(s =>
     connection.Open();
     return connection.BeginTransaction();
 });
-builder.Services.AddTransient<IUserRepository, UserRepository>();
-builder.Services.AddTransient<IAccountRepository, AccountRepository>();
-builder.Services.AddTransient<ISessionRepository, SessionRepository>();
-builder.Services.AddTransient<IMovementRepository, MovementRepository>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IAccountRepository, AccountRepository>();
+builder.Services.AddScoped<ISessionRepository, SessionRepository>();
+builder.Services.AddScoped<IMovementRepository, MovementRepository>();
+builder.Services.AddScoped<IDocumentRepository, DocumentRepository>();
 
 builder.Services.AddScoped<ISessionUseCase, SessionUseCase>();
 builder.Services.AddScoped<IUserUseCase, UserUseCase>();
 builder.Services.AddScoped<IAccountUseCase, AccountUseCase>();
 builder.Services.AddScoped<ITransferUseCase, TransferUseCase>();
+
+builder.Services.AddScoped<IFileRepository, FileRepository>();
 
 //builder.Services.AddFluentValidationAutoValidation();
 //builder.Services.AddFluentValidationClientsideAdapters();

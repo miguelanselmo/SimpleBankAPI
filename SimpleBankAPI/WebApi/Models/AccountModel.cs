@@ -42,3 +42,40 @@ public struct movements
     [JsonPropertyNameAttribute("created_at")]
     public DateTime CreatedAt { get; set; }
 }
+/*
+public struct uploadDocumentRequest
+{
+    //[JsonPropertyNameAttribute("account_id")]
+    //public int AccountId { get; set; }
+    //[JsonPropertyNameAttribute("description")]
+    //public string? Description { get; set; }
+    //[JsonPropertyNameAttribute("file")]
+    public IFormFile Content { get; set; }
+
+}
+*/
+public struct document
+{
+    [JsonPropertyNameAttribute("id")]
+    public string Id { get; set; }
+    [JsonPropertyNameAttribute("account_id")]
+    public int AccountId { get; set; }
+    [JsonPropertyNameAttribute("file_name")]
+    public string FileName { get; set; }
+    [JsonPropertyNameAttribute("created_at")]
+    public DateTime CreatedAt { get; set; }
+}
+
+/*
+public struct document
+{
+    [JsonPropertyNameAttribute("id")]
+    public string Id { get; set; }
+    [JsonPropertyNameAttribute("account_id")]
+    public int AccountId { get; set; }
+    [JsonPropertyNameAttribute("file_name")]
+    public string FileName { get; set; }
+    [JsonPropertyNameAttribute("created_at")]
+    public DateTime CreatedAt { get; set; }
+}
+*/

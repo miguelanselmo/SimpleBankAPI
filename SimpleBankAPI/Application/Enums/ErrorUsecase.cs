@@ -61,5 +61,13 @@ public enum ErrorUsecase
     UserUsernameExists,
     [Description("Error creating user.")]
     UserCreateError,
+    //Document
+    [Description("Error uploading document. Please try again.")]
+    DocumentCreatError,
+    [Description("Documents not found.")]
+    DocumentNotFound,
+    [Description("Error getting documents.")]
+    DocumentReadError,
+
 }
 

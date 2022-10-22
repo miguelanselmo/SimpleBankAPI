@@ -21,6 +21,7 @@ public class AccountController : Controller
         _sessionUseCase = sessionUseCase;
         _provider = provider;
     }
+       
 
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [HttpPost(Name = "CreateAccount")]
@@ -114,7 +115,7 @@ public class AccountController : Controller
     }
 
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-    [HttpGet("{id}", Name = "GetAccount")]
+    [HttpGet("{id:int}", Name = "GetAccount")]
     [ProducesResponseType(typeof(account), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(string), StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(typeof(string), StatusCodes.Status404NotFound)]
@@ -163,4 +164,135 @@ public class AccountController : Controller
             return Problem(ex.Message);
         }
     }
+
+    //[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [HttpPost("{id:int}/doc", Name = "UploadDocument")]
+    [RequestSizeLimit(2 * 1024 * 1024)]
+    [ProducesResponseType(typeof(string), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(string), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(string), StatusCodes.Status415UnsupportedMediaType)]
+    [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<string>> Post([FromRoute] int id)
+    {
+        try
+        {
+            /*
+            var resultClaims = _provider.GetClaims(Request.Headers.Authorization);
+            if (!resultClaims.Item1)
+                return BadRequest(resultClaims.Item2);
+            var resultSession = await _sessionUseCase.CheckSession(resultClaims.Item3);
+            if (resultSession.Item1 is not null)
+                return Unauthorized(resultSession.Item2);
+            */
+            var document = new Document
+            {
+                AccountId =id,
+                Content = HttpContext.Request.Form.Files[0],
+            };
+            var result = await _useCase.SaveDocument(document);
+            
+            switch (result.Item1)
+            {
+                case null:
+                    return Created("", document.Id);
+                case ErrorTypeUsecase.Business:
+                    return BadRequest(result.Item2);
+                case ErrorTypeUsecase.System:
+                default:
+                    return Problem(result.Item2);
+            }            
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex.Message, ex.InnerException);
+            return Problem(ex.Message);
+        }
+    }
+
+    
+    //[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [HttpGet("{id:int}/doc", Name = "ListDocuments")]
+    [ProducesResponseType(typeof(IEnumerable<document>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(string), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<IEnumerable<document>>> Get([FromRoute] int id)
+    {
+        try
+        {
+            /*
+            var resultClaims = _provider.GetClaims(Request.Headers.Authorization);
+            if (!resultClaims.Item1)
+                return BadRequest(resultClaims.Item2);
+            var resultSession = await _sessionUseCase.CheckSession(resultClaims.Item3);
+            if (resultSession.Item1 is not null)
+                return Unauthorized(resultSession.Item2);
+            */
+            var result = await _useCase.ListDocuments(id);            
+            switch (result.Item1)
+            {
+                case null:
+                    return Ok(result.Item3.Select(x => new document
+                    {
+                        Id = x.Id.ToString(),
+                        AccountId = x.AccountId,
+                        CreatedAt = x.CreatedAt,
+                        FileName = x.FileName
+                    }));
+                case ErrorTypeUsecase.Business:
+                    return BadRequest(result.Item2);
+                case ErrorTypeUsecase.System:
+                default:
+                    return Problem(result.Item2);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex.Message, ex.InnerException);
+            return Problem(ex.Message);
+        }
+    }
+
+    //[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [HttpGet("{id:int}/doc/{docid}", Name = "DownloadDocument")]
+    [ProducesResponseType(typeof(IFormFile), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(string), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(string), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult> Get([FromRoute] int id, string docId)
+    {
+        try
+        {
+            /*
+            var resultClaims = _provider.GetClaims(Request.Headers.Authorization);
+            if (!resultClaims.Item1)
+                return BadRequest(resultClaims.Item2);
+            var resultSession = await _sessionUseCase.CheckSession(resultClaims.Item3);
+            if (resultSession.Item1 is not null)
+                return Unauthorized(resultSession.Item2);
+            */
+            var result = await _useCase.GetDocument(id, docId);
+            switch (result.Item1)
+            {
+                case null:
+                    if(result.Item4 is null) return NotFound();
+                    return new FileStreamResult(result.Item4.FileStream, result.Item3.ContentType)
+                    {
+                        FileDownloadName = result.Item3.FileName,
+                    };
+                case ErrorTypeUsecase.Business:
+                    return NotFound(result.Item2);
+                case ErrorTypeUsecase.System:
+                default:
+                    return Problem(result.Item2);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex.Message, ex.InnerException);
+            return Problem(ex.Message);
+        }
+    }   
 }

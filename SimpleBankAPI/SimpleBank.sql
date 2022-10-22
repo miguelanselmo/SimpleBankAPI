@@ -66,4 +66,14 @@ CREATE TABLE public.sessions (
 	CONSTRAINT sessions_fkey FOREIGN KEY(user_id) REFERENCES users(id)
 );
 
+CREATE TABLE public.documents (
+	id varchar NOT NULL,
+	account_id int NOT NULL,
+	file_name varchar NOT NULL,
+	uri varchar NOT NULL,
+	content_type varchar NOT NULL,
+	created_at timestamptz NOT NULL DEFAULT now(),
+	CONSTRAINT documents_fkey FOREIGN KEY(account_id) REFERENCES accounts(id)
+);
+
 

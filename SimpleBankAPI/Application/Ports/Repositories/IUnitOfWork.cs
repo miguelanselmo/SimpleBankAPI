@@ -8,6 +8,7 @@ public interface IUnitOfWork
     IAccountRepository AccountRepository { get; }
     IMovementRepository MovementRepository { get; }
     ISessionRepository SessionRepository { get; }
+    IDocumentRepository DocumentRepository { get; }
     //ITransferRepository transferRepository { get; }
     //Guid Id { get; }
     //IDbConnection Connection { get; }

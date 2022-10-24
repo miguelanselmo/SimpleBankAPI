@@ -165,7 +165,7 @@ public class AccountController : Controller
         }
     }
 
-    //[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [HttpPost("{id:int}/doc", Name = "UploadDocument")]
     [RequestSizeLimit(2 * 1024 * 1024)]
     [ProducesResponseType(typeof(string), StatusCodes.Status201Created)]
@@ -177,14 +177,13 @@ public class AccountController : Controller
     {
         try
         {
-            /*
             var resultClaims = _provider.GetClaims(Request.Headers.Authorization);
             if (!resultClaims.Item1)
                 return BadRequest(resultClaims.Item2);
             var resultSession = await _sessionUseCase.CheckSession(resultClaims.Item3);
             if (resultSession.Item1 is not null)
                 return Unauthorized(resultSession.Item2);
-            */
+            
             var document = new Document
             {
                 AccountId =id,
@@ -211,7 +210,7 @@ public class AccountController : Controller
     }
 
     
-    //[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [HttpGet("{id:int}/doc", Name = "ListDocuments")]
     [ProducesResponseType(typeof(IEnumerable<document>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
@@ -221,14 +220,13 @@ public class AccountController : Controller
     {
         try
         {
-            /*
             var resultClaims = _provider.GetClaims(Request.Headers.Authorization);
             if (!resultClaims.Item1)
                 return BadRequest(resultClaims.Item2);
             var resultSession = await _sessionUseCase.CheckSession(resultClaims.Item3);
             if (resultSession.Item1 is not null)
                 return Unauthorized(resultSession.Item2);
-            */
+            
             var result = await _useCase.ListDocuments(id);            
             switch (result.Item1)
             {
@@ -254,7 +252,7 @@ public class AccountController : Controller
         }
     }
 
-    //[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [HttpGet("{id:int}/doc/{docid}", Name = "DownloadDocument")]
     [ProducesResponseType(typeof(IFormFile), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
@@ -264,15 +262,14 @@ public class AccountController : Controller
     public async Task<ActionResult> Get([FromRoute] int id, string docId)
     {
         try
-        {
-            /*
+        {            
             var resultClaims = _provider.GetClaims(Request.Headers.Authorization);
             if (!resultClaims.Item1)
                 return BadRequest(resultClaims.Item2);
             var resultSession = await _sessionUseCase.CheckSession(resultClaims.Item3);
             if (resultSession.Item1 is not null)
                 return Unauthorized(resultSession.Item2);
-            */
+            
             var result = await _useCase.GetDocument(id, docId);
             switch (result.Item1)
             {
